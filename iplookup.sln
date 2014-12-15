@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iplookup", "iplookup.vcxproj", "{E479BE85-5676-4749-BE88-019FBD8DE3D4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Russian", "src\languages\Russian\Russian.vcxproj", "{164E8145-B3A3-4E7D-B177-EA79297D8F04}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E479BE85-5676-4749-BE88-019FBD8DE3D4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E479BE85-5676-4749-BE88-019FBD8DE3D4}.Debug|Win32.Build.0 = Debug|Win32
+		{E479BE85-5676-4749-BE88-019FBD8DE3D4}.Release|Win32.ActiveCfg = Release|Win32
+		{E479BE85-5676-4749-BE88-019FBD8DE3D4}.Release|Win32.Build.0 = Release|Win32
+		{164E8145-B3A3-4E7D-B177-EA79297D8F04}.Debug|Win32.ActiveCfg = Debug|Win32
+		{164E8145-B3A3-4E7D-B177-EA79297D8F04}.Debug|Win32.Build.0 = Debug|Win32
+		{164E8145-B3A3-4E7D-B177-EA79297D8F04}.Release|Win32.ActiveCfg = Release|Win32
+		{164E8145-B3A3-4E7D-B177-EA79297D8F04}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

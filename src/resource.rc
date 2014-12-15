@@ -1,0 +1,104 @@
+#include <windows.h>
+#include <commctrl.h>
+#include "iplookup.h"
+#include "resource.h"
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+//
+// Menu resources
+//
+IDM_MAIN MENU
+{
+    POPUP "File"
+    {
+        MENUITEM "Exit\tEsc", IDM_EXIT
+    }
+    POPUP "Settings"
+    {
+        MENUITEM "Check updates at startup", IDM_CHECKUPDATEATSTARTUP_CHK
+        MENUITEM "Always on Top", IDM_ALWAYSONTOP_CHK
+        MENUITEM SEPARATOR
+        MENUITEM "Get address list at startup", IDM_GETATSTARTUP_CHK
+    }
+    POPUP "Help"
+    {
+        MENUITEM "Website", IDM_WEBSITE
+        MENUITEM "Check for updates", IDM_CHECK_UPDATES
+        MENUITEM "About", IDM_ABOUT
+    }
+}
+
+//
+// Dialog resources
+//
+IDD_MAIN DIALOGEX 0, 0, 225, 148
+STYLE DS_CENTER | WS_POPUP | WS_SYSMENU | WS_CAPTION | DS_MODALFRAME | DS_SHELLFONT | WS_GROUP | WS_VISIBLE
+CAPTION APP_NAME
+MENU IDM_MAIN
+FONT 8, "Ms Shell Dlg"
+{
+    EDITTEXT        IDC_IP_LIST, 8, 8, 209, 92, ES_MULTILINE | ES_READONLY
+	AUTOCHECKBOX    "Get external address", IDC_EXTERNAL_IP_CHK, 8, 106, 209, 10
+
+    DEFPUSHBUTTON   "Refresh", IDC_REFRESH, 148, 128, 70, 14
+}
+
+//
+// String resources
+//
+STRINGTABLE
+{
+	IDS_TRANSLATION_INFO "English (by <a href=""http://www.henrypp.org"">Henry++</a>)"
+
+	IDS_UPDATE_NO "You're using latest version of the program"
+	IDS_UPDATE_YES "An update for program is now available: %s\r\nDo you want to open the download page?"
+	IDS_UPDATE_ERROR "Error while connection to update server"
+
+	IDS_ABOUT "About"
+	IDS_COPYRIGHT "This program is redistribute under the terms of the GNU General Public License v2, see license for details.\r\n\r\nThis software is provided ""as is"" and without any express or implied warranties.\r\n\r\n<a href=""%s"">%s</a>"
+
+	IDS_IP_LOADING "Loading..."
+	IDS_IP_ERROR "error"
+	IDS_IP_LOCAL "Local addresses:"
+	IDS_IP_EXTERNAL "External address:"
+
+	IDS_WINSOCK_ERROR "Error while loading Windows Socket Library (error code: %i)"
+}
+
+//
+// Icon resources
+//
+IDI_MAIN	       		ICON           "res\\main.ico"
+
+//
+// Version Information resources
+//
+1 VERSIONINFO
+	FILEVERSION     APP_VERSION_RES
+    PRODUCTVERSION  APP_VERSION_RES
+    FILEOS          VOS__WINDOWS32
+    FILETYPE        VFT_APP
+    FILESUBTYPE     VFT2_UNKNOWN
+    FILEFLAGSMASK   0x00000000
+    FILEFLAGS       0x00000000
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "040904B0"
+        {
+            VALUE "Comments", APP_WEBSITE
+            VALUE "CompanyName", "Henry++"
+            VALUE "LegalCopyright", "Copyright © 2012 Henry++"
+            VALUE "OriginalFilename", APP_NAME_SHORT ".exe"
+            VALUE "FileDescription", APP_NAME
+			VALUE "FileVersion", APP_VERSION
+			VALUE "ProductName", APP_NAME
+            VALUE "ProductVersion", APP_VERSION
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x0409, 1200
+    }
+}
