@@ -1,24 +1,26 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iplookup", "iplookup.vcxproj", "{E479BE85-5676-4749-BE88-019FBD8DE3D4}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Russian", "src\languages\Russian\Russian.vcxproj", "{164E8145-B3A3-4E7D-B177-EA79297D8F04}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iplookup", "iplookup.vcxproj", "{51AEEC77-B27F-4FB8-989A-7AB6B075AE11}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Win32 = Debug|Win32
-		Release|Win32 = Release|Win32
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E479BE85-5676-4749-BE88-019FBD8DE3D4}.Debug|Win32.ActiveCfg = Debug|Win32
-		{E479BE85-5676-4749-BE88-019FBD8DE3D4}.Debug|Win32.Build.0 = Debug|Win32
-		{E479BE85-5676-4749-BE88-019FBD8DE3D4}.Release|Win32.ActiveCfg = Release|Win32
-		{E479BE85-5676-4749-BE88-019FBD8DE3D4}.Release|Win32.Build.0 = Release|Win32
-		{164E8145-B3A3-4E7D-B177-EA79297D8F04}.Debug|Win32.ActiveCfg = Debug|Win32
-		{164E8145-B3A3-4E7D-B177-EA79297D8F04}.Debug|Win32.Build.0 = Debug|Win32
-		{164E8145-B3A3-4E7D-B177-EA79297D8F04}.Release|Win32.ActiveCfg = Release|Win32
-		{164E8145-B3A3-4E7D-B177-EA79297D8F04}.Release|Win32.Build.0 = Release|Win32
+		{51AEEC77-B27F-4FB8-989A-7AB6B075AE11}.Debug|x64.ActiveCfg = Debug|x64
+		{51AEEC77-B27F-4FB8-989A-7AB6B075AE11}.Debug|x64.Build.0 = Debug|x64
+		{51AEEC77-B27F-4FB8-989A-7AB6B075AE11}.Debug|x86.ActiveCfg = Debug|Win32
+		{51AEEC77-B27F-4FB8-989A-7AB6B075AE11}.Debug|x86.Build.0 = Debug|Win32
+		{51AEEC77-B27F-4FB8-989A-7AB6B075AE11}.Release|x64.ActiveCfg = Release|x64
+		{51AEEC77-B27F-4FB8-989A-7AB6B075AE11}.Release|x64.Build.0 = Release|x64
+		{51AEEC77-B27F-4FB8-989A-7AB6B075AE11}.Release|x86.ActiveCfg = Release|Win32
+		{51AEEC77-B27F-4FB8-989A-7AB6B075AE11}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
