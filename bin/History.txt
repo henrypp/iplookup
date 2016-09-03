@@ -1,3 +1,11 @@
+v1.5 (3 September 2016)
++ now you can set external ip url itself ("ExternalUrl" config)
++ revert old icon
+- fixed race condition
+- fixed working under proxy
+- updated to the latest sdk
+- updated localization
+
 v1.4 (22 January 2016)
 + added ipv6 support
 - changed external ip server to "www.ipify.org"
