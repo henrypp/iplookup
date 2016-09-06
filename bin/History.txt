@@ -1,3 +1,8 @@
+v1.6 (7 September 2016)
+- previous build fixes
+- updated to the latest sdk
+- updated localization
+
 v1.5 (3 September 2016)
 + now you can set external ip url itself ("ExternalUrl" config)
 + revert old icon

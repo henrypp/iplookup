@@ -49,13 +49,12 @@
 #define IDS_CHECKUPDATES 1012
 #define IDS_ABOUT 1013
 
-#define IDS_DEFAULT 1014
-
 #define IDS_COPY 2000
-#define IDS_REFRESH 2001
 
-#define IDS_GROUP1 3000
-#define IDS_GROUP2 3001
+#define IDS_REFRESH 3000
+
+#define IDS_GROUP1 4000
+#define IDS_GROUP2 4001
 
 // Icons
 #define IDI_MAIN 100
