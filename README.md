@@ -1,6 +1,6 @@
 ## Ip Lookup
 
-![Ip Lookup](http://www.henrypp.org/images/iplookup.jpg)
+![Ip Lookup](http://www.henrypp.org/images/iplookup.jpg?fix)
 
 Application for displaying list of IP addresses your computer, include external address.
 
