@@ -5,6 +5,9 @@
 #define IDC_STATIC (-1)
 #endif
 
+// Acceleration
+#define IDA_MAIN 100
+
 // Menu Id
 #define IDM_MAIN 100
 #define IDM_LISTVIEW 101
@@ -14,8 +17,7 @@
 
 // Main Dlg
 #define IDC_LISTVIEW 100
-#define IDC_REFRESH 101
-#define IDC_EXIT 102
+#define IDC_STATUSBAR 101
 
 // Main Menu
 #define IDM_EXIT 2000
@@ -30,7 +32,8 @@
 #define IDM_DEFAULT 3000
 
 // Listview Menu
-#define IDM_COPY 4000
+#define IDM_REFRESH 4000
+#define IDM_COPY 4001
 
 // Strings
 #define IDS_UPDATE_NO 1000
@@ -49,12 +52,14 @@
 #define IDS_CHECKUPDATES 1012
 #define IDS_ABOUT 1013
 
-#define IDS_COPY 2000
+#define IDS_COPY 1014
 
-#define IDS_REFRESH 3000
+#define IDS_REFRESH 1015
 
-#define IDS_GROUP1 4000
-#define IDS_GROUP2 4001
+#define IDS_GROUP1 1016
+#define IDS_GROUP2 1017
+
+#define IDS_STATUS 1018
 
 // Icons
 #define IDI_MAIN 100
