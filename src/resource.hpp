@@ -6,7 +6,7 @@
 #endif
 
 // Acceleration
-#define IDA_MAIN 100
+#define IDA_MAIN 1
 
 // Menu Id
 #define IDM_MAIN 100
@@ -16,50 +16,50 @@
 #define IDD_MAIN 100
 
 // Main Dlg
-#define IDC_LISTVIEW 100
-#define IDC_STATUSBAR 101
+#define IDC_LISTVIEW 102
+#define IDC_STATUSBAR 103
 
 // Main Menu
-#define IDM_EXIT 2000
-#define IDM_ALWAYSONTOP_CHK 2001
-#define IDM_CHECKUPDATES_CHK 2002
-#define IDM_GETEXTERNALIP_CHK 2003
-#define IDM_WEBSITE 2004
-#define IDM_DONATE 2005
-#define IDM_CHECKUPDATES 2006
-#define IDM_ABOUT 2007
+#define IDM_EXIT 104
+#define IDM_ALWAYSONTOP_CHK 105
+#define IDM_CHECKUPDATES_CHK 106
+#define IDM_GETEXTERNALIP_CHK 107
+#define IDM_WEBSITE 108
+#define IDM_DONATE 109
+#define IDM_CHECKUPDATES 110
+#define IDM_ABOUT 111
 
-#define IDM_DEFAULT 3000
+#define IDM_DEFAULT 112
 
 // Listview Menu
-#define IDM_REFRESH 4000
-#define IDM_COPY 4001
+#define IDM_REFRESH 113
+#define IDM_COPY 114
 
 // Strings
-#define IDS_UPDATE_NO 1000
-#define IDS_UPDATE_YES 1001
+#define IDS_UPDATE_NO 1
+#define IDS_UPDATE_YES 2
 
-#define IDS_FILE 1002
-#define IDS_EXIT 1003
-#define IDS_SETTINGS 1004
-#define IDS_ALWAYSONTOP_CHK 1005
-#define IDS_CHECKUPDATES_CHK 1006
-#define IDS_GETEXTERNALIP_CHK 1007
-#define IDS_LANGUAGE 1008
-#define IDS_HELP 1009
-#define IDS_WEBSITE 1010
-#define IDS_DONATE 1011
-#define IDS_CHECKUPDATES 1012
-#define IDS_ABOUT 1013
+#define IDS_FILE 3
+#define IDS_EXIT 4
+#define IDS_SETTINGS 5
+#define IDS_ALWAYSONTOP_CHK 6
+#define IDS_CHECKUPDATES_CHK 7
+#define IDS_GETEXTERNALIP_CHK 8
+#define IDS_LANGUAGE 9
+#define IDS_HELP 10
+#define IDS_WEBSITE 11
+#define IDS_DONATE 12
+#define IDS_CHECKUPDATES 13
+#define IDS_ABOUT 14
 
-#define IDS_COPY 1014
+#define IDS_COPY 15
 
-#define IDS_REFRESH 1015
+#define IDS_REFRESH 16
 
-#define IDS_GROUP1 1016
-#define IDS_GROUP2 1017
+#define IDS_GROUP1 17
+#define IDS_GROUP2 18
 
-#define IDS_STATUS 1018
+#define IDS_STATUS 19
 
 // Icons
 #define IDI_MAIN 100
