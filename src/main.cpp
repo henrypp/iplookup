@@ -130,11 +130,7 @@ void ResizeWindow (HWND hwnd, INT, INT)
 
 	GetClientRect (hwnd, &rc);
 
-	HDWP hdefer = BeginDeferWindowPos (1);
-
-	_r_wnd_resize (&hdefer, GetDlgItem (hwnd, IDC_LISTVIEW), nullptr, 0, 0, _R_RECT_WIDTH (&rc), _R_RECT_HEIGHT (&rc) - statusbar_height, 0);
-
-	EndDeferWindowPos (hdefer);
+	_r_wnd_resize (nullptr, GetDlgItem (hwnd, IDC_LISTVIEW), nullptr, 0, 0, _R_RECT_WIDTH (&rc), _R_RECT_HEIGHT (&rc) - statusbar_height, 0);
 
 	_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, nullptr, _R_RECT_WIDTH (&rc));
 
@@ -176,7 +172,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			const HMENU menu = GetMenu (hwnd);
 
 			app.LocaleMenu (menu, IDS_FILE, 0, true, nullptr);
-			app.LocaleMenu (menu,IDS_EXIT,IDM_EXIT, false, L"\tEsc");
+			app.LocaleMenu (menu, IDS_EXIT, IDM_EXIT, false, L"\tEsc");
 			app.LocaleMenu (menu, IDS_SETTINGS, 1, true, nullptr);
 			app.LocaleMenu (menu, IDS_ALWAYSONTOP_CHK, IDM_ALWAYSONTOP_CHK, false, nullptr);
 			app.LocaleMenu (menu, IDS_CHECKUPDATES_CHK, IDM_CHECKUPDATES_CHK, false, nullptr);
@@ -190,7 +186,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			// refresh list
 			SendMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
 
-			app.LocaleEnum ((HWND)GetSubMenu (menu, 1), 5, true, IDM_DEFAULT); // enum localizations
+			app.LocaleEnum ((HWND)GetSubMenu (menu, 1), 5, true, IDX_LANGUAGE); // enum localizations
 
 			break;
 		}
@@ -218,7 +214,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				// localize
 				app.LocaleMenu (submenu, IDS_REFRESH, IDM_REFRESH, false, L"\tF5");
-				app.LocaleMenu (submenu,IDS_COPY, IDM_COPY, false, L"\tCtrl+C");
+				app.LocaleMenu (submenu, IDS_COPY, IDM_COPY, false, L"\tCtrl+C");
 
 				if (_r_fastlock_islocked (&lock))
 					EnableMenuItem (submenu, IDM_REFRESH, MF_BYCOMMAND | MF_DISABLED);
@@ -261,9 +257,9 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 		case WM_COMMAND:
 		{
-			if (HIWORD (wparam) == 0 && LOWORD (wparam) >= IDM_DEFAULT && LOWORD (wparam) <= IDM_DEFAULT + app.LocaleGetCount ())
+			if (HIWORD (wparam) == 0 && LOWORD (wparam) >= IDX_LANGUAGE && LOWORD (wparam) <= IDX_LANGUAGE + app.LocaleGetCount ())
 			{
-				app.LocaleApplyFromMenu (GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), 5), LOWORD (wparam), IDM_DEFAULT);
+				app.LocaleApplyFromMenu (GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), 5), LOWORD (wparam), IDX_LANGUAGE);
 
 				return FALSE;
 			}
@@ -331,7 +327,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDM_REFRESH:
 				{
-					_beginthreadex (nullptr, 0, &_app_print, hwnd, 0, nullptr);
+					_r_createthread (&_app_print, hwnd, false);
 					break;
 				}
 

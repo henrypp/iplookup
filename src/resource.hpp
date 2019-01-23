@@ -29,11 +29,11 @@
 #define IDM_CHECKUPDATES 110
 #define IDM_ABOUT 111
 
-#define IDM_DEFAULT 112
-
 // Listview Menu
 #define IDM_REFRESH 113
 #define IDM_COPY 114
+
+#define IDX_LANGUAGE 1000
 
 // Strings
 #define IDS_UPDATE_NO 1
