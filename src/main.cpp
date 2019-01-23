@@ -1,5 +1,5 @@
 // Ip Lookup
-// Copyright (c) 2011-2018 Henry++
+// Copyright (c) 2011-2019 Henry++
 
 #include <ws2tcpip.h>
 #include <windows.h>
@@ -19,14 +19,14 @@ _R_FASTLOCK lock;
 
 UINT WINAPI _app_print (LPVOID lparam)
 {
-	HWND hwnd = (HWND)lparam;
+	const HWND hwnd = (HWND)lparam;
 
 	_r_fastlock_acquireexclusive (&lock);
 
 	SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_DELETEALLITEMS, 0, 0);
 
 	WSADATA wsa = {0};
-	if (WSAStartup (MAKEWORD (2, 2), &wsa) == ERROR_SUCCESS)
+	if (WSAStartup (WINSOCK_VERSION, &wsa) == ERROR_SUCCESS)
 	{
 		PIP_ADAPTER_ADDRESSES adapter_addresses = nullptr;
 		PIP_ADAPTER_ADDRESSES adapter = nullptr;
@@ -49,8 +49,7 @@ UINT WINAPI _app_print (LPVOID lparam)
 			}
 			else
 			{
-				delete[] adapter_addresses;
-				adapter_addresses = nullptr;
+				SAFE_DELETE_ARRAY (adapter_addresses);
 
 				if (error == ERROR_BUFFER_OVERFLOW)
 					continue;
@@ -99,8 +98,7 @@ UINT WINAPI _app_print (LPVOID lparam)
 				}
 			}
 
-			delete[] adapter_addresses;
-			adapter_addresses = nullptr;
+			SAFE_DELETE_ARRAY (adapter_addresses);
 		}
 
 		WSACleanup ();
@@ -108,93 +106,19 @@ UINT WINAPI _app_print (LPVOID lparam)
 
 	if (app.ConfigGet (L"GetExternalIp", false).AsBool ())
 	{
-		HINTERNET hsession = _r_inet_createsession (app.GetUserAgent ());
+		rstring bufferw;
 
-		if (hsession)
+		if (app.DownloadURL (app.ConfigGet (L"ExternalUrl", EXTERNAL_URL), &bufferw, false, nullptr, 0))
 		{
-			HINTERNET hconnect = nullptr;
-			HINTERNET hrequest = nullptr;
-
-			if (_r_inet_openurl (hsession, app.ConfigGet (L"ExternalUrl", EXTERNAL_URL), &hconnect, &hrequest, nullptr))
-			{
-				CHAR buffera[1024] = {0};
-				DWORD total_length = 0;
-				rstring bufferw;
-
-				while (true)
-				{
-					if (!_r_inet_readrequest (hrequest, buffera, _countof (buffera) - 1, &total_length))
-						break;
-
-					bufferw.Append (buffera);
-				}
-
-				bufferw.Trim (L" \r\n");
-
-				_r_listview_additem (hwnd, IDC_LISTVIEW, LAST_VALUE, 0, bufferw, LAST_VALUE, 1);
-			}
-
-			if (hrequest)
-				_r_inet_close (hrequest);
-
-			if (hconnect)
-				_r_inet_close (hconnect);
-
-			_r_inet_close (hsession);
+			_r_listview_additem (hwnd, IDC_LISTVIEW, LAST_VALUE, 0, bufferw, LAST_VALUE, 1);
 		}
 	}
 
-	_r_status_settext (hwnd, IDC_STATUSBAR, 0, _r_fmt (I18N (&app, IDS_STATUS, 0), _r_listview_getitemcount (hwnd, IDC_LISTVIEW)));
+	_r_status_settext (hwnd, IDC_STATUSBAR, 0, _r_fmt (app.LocaleString (IDS_STATUS, nullptr), _r_listview_getitemcount (hwnd, IDC_LISTVIEW)));
 
 	_r_fastlock_releaseexclusive (&lock);
 
 	return ERROR_SUCCESS;
-}
-
-BOOL initializer_callback (HWND hwnd, DWORD msg, LPVOID, LPVOID)
-{
-	switch (msg)
-	{
-		case _RM_LOCALIZE:
-		{
-			// configure listview
-			_r_listview_deleteallgroups (hwnd, IDC_LISTVIEW);
-
-			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 0, I18N (&app, IDS_GROUP1, 0), 0, 0);
-			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 1, I18N (&app, IDS_GROUP2, 0), 0, 0);
-
-			// localize
-			HMENU menu = GetMenu (hwnd);
-
-			app.LocaleMenu (menu, I18N (&app, IDS_FILE, 0), 0, true, nullptr);
-			app.LocaleMenu (menu, I18N (&app, IDS_EXIT, 0), IDM_EXIT, false, L"\tEsc");
-			app.LocaleMenu (menu, I18N (&app, IDS_SETTINGS, 0), 1, true, nullptr);
-			app.LocaleMenu (menu, I18N (&app, IDS_ALWAYSONTOP_CHK, 0), IDM_ALWAYSONTOP_CHK, false, nullptr);
-			app.LocaleMenu (menu, I18N (&app, IDS_CHECKUPDATES_CHK, 0), IDM_CHECKUPDATES_CHK, false, nullptr);
-			app.LocaleMenu (GetSubMenu (menu, 1), I18N (&app, IDS_LANGUAGE, 0), 5, true, L" (Language)");
-			app.LocaleMenu (menu, I18N (&app, IDS_GETEXTERNALIP_CHK, 0), IDM_GETEXTERNALIP_CHK, false, nullptr);
-			app.LocaleMenu (menu, I18N (&app, IDS_HELP, 0), 2, true, nullptr);
-			app.LocaleMenu (menu, I18N (&app, IDS_WEBSITE, 0), IDM_WEBSITE, false, nullptr);
-			app.LocaleMenu (menu, I18N (&app, IDS_CHECKUPDATES, 0), IDM_CHECKUPDATES, false, nullptr);
-			app.LocaleMenu (menu, I18N (&app, IDS_ABOUT, 0), IDM_ABOUT, false, nullptr);
-
-			DrawMenuBar (hwnd); // redraw menu
-
-			// refresh list
-			SendMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
-
-			app.LocaleEnum ((HWND)GetSubMenu (menu, 1), 5, true, IDM_DEFAULT); // enum localizations
-
-			break;
-		}
-
-		case _RM_UNINITIALIZE:
-		{
-			break;
-		}
-	}
-
-	return FALSE;
 }
 
 void ResizeWindow (HWND hwnd, INT, INT)
@@ -205,7 +129,12 @@ void ResizeWindow (HWND hwnd, INT, INT)
 	const INT statusbar_height = _R_RECT_HEIGHT (&rc);
 
 	GetClientRect (hwnd, &rc);
-	SetWindowPos (GetDlgItem (hwnd, IDC_LISTVIEW), nullptr, 0, 0, _R_RECT_WIDTH (&rc), _R_RECT_HEIGHT (&rc) - statusbar_height, SWP_NOCOPYBITS | SWP_NOREDRAW | SWP_NOSENDCHANGING | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE);
+
+	HDWP hdefer = BeginDeferWindowPos (1);
+
+	_r_wnd_resize (&hdefer, GetDlgItem (hwnd, IDC_LISTVIEW), nullptr, 0, 0, _R_RECT_WIDTH (&rc), _R_RECT_HEIGHT (&rc) - statusbar_height, 0);
+
+	EndDeferWindowPos (hdefer);
 
 	_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, nullptr, _R_RECT_WIDTH (&rc));
 
@@ -218,6 +147,10 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		case WM_INITDIALOG:
 		{
+#ifndef _APP_NO_DARKTHEME
+			_r_wnd_setdarktheme (hwnd);
+#endif // _APP_NO_DARKTHEME
+
 			// configure listview
 			_r_listview_setstyle (hwnd, IDC_LISTVIEW, LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_LABELTIP);
 
@@ -231,22 +164,47 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			break;
 		}
 
+		case RM_LOCALIZE:
+		{
+			// configure listview
+			_r_listview_deleteallgroups (hwnd, IDC_LISTVIEW);
+
+			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 0, app.LocaleString (IDS_GROUP1, nullptr), 0, 0);
+			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 1, app.LocaleString (IDS_GROUP2, nullptr), 0, 0);
+
+			// localize
+			const HMENU menu = GetMenu (hwnd);
+
+			app.LocaleMenu (menu, IDS_FILE, 0, true, nullptr);
+			app.LocaleMenu (menu,IDS_EXIT,IDM_EXIT, false, L"\tEsc");
+			app.LocaleMenu (menu, IDS_SETTINGS, 1, true, nullptr);
+			app.LocaleMenu (menu, IDS_ALWAYSONTOP_CHK, IDM_ALWAYSONTOP_CHK, false, nullptr);
+			app.LocaleMenu (menu, IDS_CHECKUPDATES_CHK, IDM_CHECKUPDATES_CHK, false, nullptr);
+			app.LocaleMenu (GetSubMenu (menu, 1), IDS_LANGUAGE, 5, true, L" (Language)");
+			app.LocaleMenu (menu, IDS_GETEXTERNALIP_CHK, IDM_GETEXTERNALIP_CHK, false, nullptr);
+			app.LocaleMenu (menu, IDS_HELP, 2, true, nullptr);
+			app.LocaleMenu (menu, IDS_WEBSITE, IDM_WEBSITE, false, nullptr);
+			app.LocaleMenu (menu, IDS_CHECKUPDATES, IDM_CHECKUPDATES, false, nullptr);
+			app.LocaleMenu (menu, IDS_ABOUT, IDM_ABOUT, false, nullptr);
+
+			// refresh list
+			SendMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
+
+			app.LocaleEnum ((HWND)GetSubMenu (menu, 1), 5, true, IDM_DEFAULT); // enum localizations
+
+			break;
+		}
+
 		case WM_DESTROY:
 		{
 			PostQuitMessage (0);
 			break;
 		}
 
-		case WM_QUERYENDSESSION:
-		{
-			SetWindowLongPtr (hwnd, DWLP_MSGRESULT, TRUE);
-			return TRUE;
-		}
-
 		case WM_SIZE:
 		{
 			ResizeWindow (hwnd, LOWORD (lparam), HIWORD (lparam));
-			RedrawWindow (hwnd, nullptr, nullptr, RDW_ALLCHILDREN | RDW_ERASE | RDW_INVALIDATE);
+			RedrawWindow (hwnd, nullptr, nullptr, RDW_NOFRAME | RDW_NOINTERNALPAINT | RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 
 			break;
 		}
@@ -259,8 +217,8 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				const HMENU submenu = GetSubMenu (menu, 0);
 
 				// localize
-				app.LocaleMenu (submenu, I18N (&app, IDS_REFRESH, 0), IDM_REFRESH, false, L"\tF5");
-				app.LocaleMenu (submenu, I18N (&app, IDS_COPY, 0), IDM_COPY, false, L"\tCtrl+C");
+				app.LocaleMenu (submenu, IDS_REFRESH, IDM_REFRESH, false, L"\tF5");
+				app.LocaleMenu (submenu,IDS_COPY, IDM_COPY, false, L"\tCtrl+C");
 
 				if (_r_fastlock_islocked (&lock))
 					EnableMenuItem (submenu, IDM_REFRESH, MF_BYCOMMAND | MF_DISABLED);
@@ -361,13 +319,13 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDM_CHECKUPDATES:
 				{
-					app.CheckForUpdates (false);
+					app.UpdateCheck (true);
 					break;
 				}
 
 				case IDM_ABOUT:
 				{
-					app.CreateAboutWindow (hwnd, I18N (&app, IDS_DONATE, 0));
+					app.CreateAboutWindow (hwnd);
 					break;
 				}
 
@@ -411,24 +369,25 @@ INT APIENTRY wWinMain (HINSTANCE, HINSTANCE, LPWSTR, INT)
 {
 	MSG msg = {0};
 
-	if (app.CreateMainWindow (&DlgProc, &initializer_callback))
+	if (app.CreateMainWindow (IDD_MAIN, IDI_MAIN, &DlgProc))
 	{
 		const HACCEL haccel = LoadAccelerators (app.GetHINSTANCE (), MAKEINTRESOURCE (IDA_MAIN));
 
-		while (GetMessage (&msg, nullptr, 0, 0) > 0)
+		if (haccel)
 		{
-			if (haccel)
+			while (GetMessage (&msg, nullptr, 0, 0) > 0)
+			{
 				TranslateAccelerator (app.GetHWND (), haccel, &msg);
 
-			if (!IsDialogMessage (app.GetHWND (), &msg))
-			{
-				TranslateMessage (&msg);
-				DispatchMessage (&msg);
+				if (!IsDialogMessage (app.GetHWND (), &msg))
+				{
+					TranslateMessage (&msg);
+					DispatchMessage (&msg);
+				}
 			}
-		}
 
-		if (haccel)
 			DestroyAcceleratorTable (haccel);
+		}
 	}
 
 	return (INT)msg.wParam;
