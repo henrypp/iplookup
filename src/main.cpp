@@ -26,6 +26,7 @@ UINT WINAPI _app_print (LPVOID lparam)
 	SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_DELETEALLITEMS, 0, 0);
 
 	WSADATA wsa = {0};
+
 	if (WSAStartup (WINSOCK_VERSION, &wsa) == ERROR_SUCCESS)
 	{
 		PIP_ADAPTER_ADDRESSES adapter_addresses = nullptr;
@@ -89,7 +90,7 @@ UINT WINAPI _app_print (LPVOID lparam)
 						InetNtop (AF_INET6, &(ipv6->sin6_addr), buffer.GetBuffer (INET6_ADDRSTRLEN), INET6_ADDRSTRLEN);
 						buffer.ReleaseBuffer ();
 
-						_r_listview_additem (hwnd, IDC_LISTVIEW, LAST_VALUE, 0, buffer, LAST_VALUE, 0);
+						_r_listview_additem (hwnd, IDC_LISTVIEW, LAST_VALUE, 0, buffer, LAST_VALUE, 1);
 					}
 					else
 					{
@@ -109,9 +110,7 @@ UINT WINAPI _app_print (LPVOID lparam)
 		rstring bufferw;
 
 		if (app.DownloadURL (app.ConfigGet (L"ExternalUrl", EXTERNAL_URL), &bufferw, false, nullptr, 0))
-		{
-			_r_listview_additem (hwnd, IDC_LISTVIEW, LAST_VALUE, 0, bufferw, LAST_VALUE, 1);
-		}
+			_r_listview_additem (hwnd, IDC_LISTVIEW, LAST_VALUE, 0, bufferw, LAST_VALUE, 2);
 	}
 
 	_r_status_settext (hwnd, IDC_STATUSBAR, 0, _r_fmt (app.LocaleString (IDS_STATUS, nullptr), _r_listview_getitemcount (hwnd, IDC_LISTVIEW)));
@@ -121,18 +120,16 @@ UINT WINAPI _app_print (LPVOID lparam)
 	return ERROR_SUCCESS;
 }
 
-void ResizeWindow (HWND hwnd, INT, INT)
+void ResizeWindow (HWND hwnd, INT width, INT height)
 {
 	RECT rc = {0};
-
 	GetClientRect (GetDlgItem (hwnd, IDC_STATUSBAR), &rc);
+
 	const INT statusbar_height = _R_RECT_HEIGHT (&rc);
 
-	GetClientRect (hwnd, &rc);
+	_r_wnd_resize (nullptr, GetDlgItem (hwnd, IDC_LISTVIEW), nullptr, 0, 0, width, height - statusbar_height, 0);
 
-	_r_wnd_resize (nullptr, GetDlgItem (hwnd, IDC_LISTVIEW), nullptr, 0, 0, _R_RECT_WIDTH (&rc), _R_RECT_HEIGHT (&rc) - statusbar_height, 0);
-
-	_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, nullptr, _R_RECT_WIDTH (&rc));
+	_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, nullptr, width - GetSystemMetrics (SM_CXVSCROLL));
 
 	SendDlgItemMessage (hwnd, IDC_STATUSBAR, WM_SIZE, 0, 0);
 }
@@ -151,7 +148,11 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			_r_listview_setstyle (hwnd, IDC_LISTVIEW, LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_LABELTIP);
 
 			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 0, nullptr, 95, LVCFMT_LEFT);
+			break;
+		}
 
+		case RM_INITIALIZE:
+		{
 			// configure menu
 			CheckMenuItem (GetMenu (hwnd), IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (app.ConfigGet (L"AlwaysOnTop", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 			CheckMenuItem (GetMenu (hwnd), IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (app.ConfigGet (L"CheckUpdates", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
@@ -165,28 +166,29 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			// configure listview
 			_r_listview_deleteallgroups (hwnd, IDC_LISTVIEW);
 
-			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 0, app.LocaleString (IDS_GROUP1, nullptr), 0, 0);
-			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 1, app.LocaleString (IDS_GROUP2, nullptr), 0, 0);
+			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 0, L"IPv4", 0, 0);
+			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 1, L"IPv6", 0, 0);
+			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 2, app.LocaleString (IDS_GROUP2, nullptr), 0, 0);
 
 			// localize
-			const HMENU menu = GetMenu (hwnd);
+			const HMENU hmenu = GetMenu (hwnd);
 
-			app.LocaleMenu (menu, IDS_FILE, 0, true, nullptr);
-			app.LocaleMenu (menu, IDS_EXIT, IDM_EXIT, false, L"\tEsc");
-			app.LocaleMenu (menu, IDS_SETTINGS, 1, true, nullptr);
-			app.LocaleMenu (menu, IDS_ALWAYSONTOP_CHK, IDM_ALWAYSONTOP_CHK, false, nullptr);
-			app.LocaleMenu (menu, IDS_CHECKUPDATES_CHK, IDM_CHECKUPDATES_CHK, false, nullptr);
-			app.LocaleMenu (GetSubMenu (menu, 1), IDS_LANGUAGE, 5, true, L" (Language)");
-			app.LocaleMenu (menu, IDS_GETEXTERNALIP_CHK, IDM_GETEXTERNALIP_CHK, false, nullptr);
-			app.LocaleMenu (menu, IDS_HELP, 2, true, nullptr);
-			app.LocaleMenu (menu, IDS_WEBSITE, IDM_WEBSITE, false, nullptr);
-			app.LocaleMenu (menu, IDS_CHECKUPDATES, IDM_CHECKUPDATES, false, nullptr);
-			app.LocaleMenu (menu, IDS_ABOUT, IDM_ABOUT, false, nullptr);
+			app.LocaleMenu (hmenu, IDS_FILE, 0, true, nullptr);
+			app.LocaleMenu (hmenu, IDS_EXIT, IDM_EXIT, false, L"\tEsc");
+			app.LocaleMenu (hmenu, IDS_SETTINGS, 1, true, nullptr);
+			app.LocaleMenu (hmenu, IDS_ALWAYSONTOP_CHK, IDM_ALWAYSONTOP_CHK, false, nullptr);
+			app.LocaleMenu (hmenu, IDS_CHECKUPDATES_CHK, IDM_CHECKUPDATES_CHK, false, nullptr);
+			app.LocaleMenu (GetSubMenu (hmenu, 1), IDS_LANGUAGE, 5, true, L" (Language)");
+			app.LocaleMenu (hmenu, IDS_GETEXTERNALIP_CHK, IDM_GETEXTERNALIP_CHK, false, nullptr);
+			app.LocaleMenu (hmenu, IDS_HELP, 2, true, nullptr);
+			app.LocaleMenu (hmenu, IDS_WEBSITE, IDM_WEBSITE, false, nullptr);
+			app.LocaleMenu (hmenu, IDS_CHECKUPDATES, IDM_CHECKUPDATES, false, nullptr);
+			app.LocaleMenu (hmenu, IDS_ABOUT, IDM_ABOUT, false, nullptr);
 
 			// refresh list
 			SendMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
 
-			app.LocaleEnum ((HWND)GetSubMenu (menu, 1), 5, true, IDX_LANGUAGE); // enum localizations
+			app.LocaleEnum ((HWND)GetSubMenu (hmenu, 1), 5, true, IDX_LANGUAGE); // enum localizations
 
 			break;
 		}
@@ -209,47 +211,25 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			if (GetDlgCtrlID ((HWND)wparam) == IDC_LISTVIEW)
 			{
-				const HMENU menu = LoadMenu (nullptr, MAKEINTRESOURCE (IDM_LISTVIEW));
-				const HMENU submenu = GetSubMenu (menu, 0);
+				const HMENU hmenu = LoadMenu (nullptr, MAKEINTRESOURCE (IDM_LISTVIEW));
+				const HMENU hsubmenu = GetSubMenu (hmenu, 0);
 
 				// localize
-				app.LocaleMenu (submenu, IDS_REFRESH, IDM_REFRESH, false, L"\tF5");
-				app.LocaleMenu (submenu, IDS_COPY, IDM_COPY, false, L"\tCtrl+C");
+				app.LocaleMenu (hsubmenu, IDS_REFRESH, IDM_REFRESH, false, L"\tF5");
+				app.LocaleMenu (hsubmenu, IDS_COPY, IDM_COPY, false, L"\tCtrl+C");
 
 				if (_r_fastlock_islocked (&lock))
-					EnableMenuItem (submenu, IDM_REFRESH, MF_BYCOMMAND | MF_DISABLED);
+					EnableMenuItem (hsubmenu, IDM_REFRESH, MF_BYCOMMAND | MF_DISABLED);
 
 				if (!SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_GETSELECTEDCOUNT, 0, 0))
-					EnableMenuItem (submenu, IDM_COPY, MF_BYCOMMAND | MF_DISABLED);
+					EnableMenuItem (hsubmenu, IDM_COPY, MF_BYCOMMAND | MF_DISABLED);
 
 				POINT pt = {0};
 				GetCursorPos (&pt);
 
-				TrackPopupMenuEx (submenu, TPM_RIGHTBUTTON | TPM_LEFTBUTTON, pt.x, pt.y, hwnd, nullptr);
+				TrackPopupMenuEx (hsubmenu, TPM_RIGHTBUTTON | TPM_LEFTBUTTON, pt.x, pt.y, hwnd, nullptr);
 
-				DestroyMenu (menu);
-			}
-
-			break;
-		}
-
-		case WM_NOTIFY:
-		{
-			LPNMHDR nmlp = (LPNMHDR)lparam;
-
-			switch (nmlp->code)
-			{
-				case LVN_DELETEALLITEMS:
-				case LVN_INSERTITEM:
-				case LVN_DELETEITEM:
-				{
-					RECT rc = {0};
-					GetWindowRect (GetDlgItem (hwnd, IDC_LISTVIEW), &rc);
-
-					_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, nullptr, _R_RECT_WIDTH (&rc));
-
-					break;
-				}
+				DestroyMenu (hmenu);
 			}
 
 			break;
@@ -275,32 +255,32 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDM_ALWAYSONTOP_CHK:
 				{
-					bool val = app.ConfigGet (L"AlwaysOnTop", false).AsBool ();
+					const bool new_val = !app.ConfigGet (L"AlwaysOnTop", false).AsBool ();
 
-					CheckMenuItem (GetMenu (hwnd), IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (!val ? MF_CHECKED : MF_UNCHECKED));
-					app.ConfigSet (L"AlwaysOnTop", !val);
+					CheckMenuItem (GetMenu (hwnd), IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
+					app.ConfigSet (L"AlwaysOnTop", new_val);
 
-					_r_wnd_top (hwnd, !val);
+					_r_wnd_top (hwnd, new_val);
 
 					break;
 				}
 
 				case IDM_CHECKUPDATES_CHK:
 				{
-					bool val = app.ConfigGet (L"CheckUpdates", true).AsBool ();
+					const bool new_val = !app.ConfigGet (L"CheckUpdates", true).AsBool ();
 
-					CheckMenuItem (GetMenu (hwnd), IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (!val ? MF_CHECKED : MF_UNCHECKED));
-					app.ConfigSet (L"CheckUpdates", !val);
+					CheckMenuItem (GetMenu (hwnd), IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
+					app.ConfigSet (L"CheckUpdates", new_val);
 
 					break;
 				}
 
 				case IDM_GETEXTERNALIP_CHK:
 				{
-					bool val = app.ConfigGet (L"GetExternalIp", false).AsBool ();
+					const bool new_val = !app.ConfigGet (L"GetExternalIp", false).AsBool ();
 
-					CheckMenuItem (GetMenu (hwnd), IDM_GETEXTERNALIP_CHK, MF_BYCOMMAND | (!val ? MF_CHECKED : MF_UNCHECKED));
-					app.ConfigSet (L"GetExternalIp", !val);
+					CheckMenuItem (GetMenu (hwnd), IDM_GETEXTERNALIP_CHK, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
+					app.ConfigSet (L"GetExternalIp", new_val);
 
 					SendMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
 
