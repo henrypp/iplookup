@@ -1,3 +1,8 @@
+v1.6.1 (x March 2019)
+- new ui
+- updated to the latest sdk
+- updated localization
+
 v1.6 (7 September 2016)
 - previous build fixes
 - updated to the latest sdk
