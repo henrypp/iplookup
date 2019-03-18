@@ -30,8 +30,8 @@
 #define IDM_ABOUT 111
 
 // Listview Menu
-#define IDM_REFRESH 113
-#define IDM_COPY 114
+#define IDM_REFRESH 112
+#define IDM_COPY 113
 
 #define IDX_LANGUAGE 1000
 
