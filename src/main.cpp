@@ -15,13 +15,13 @@
 
 rapp app (APP_NAME, APP_NAME_SHORT, APP_VERSION, APP_COPYRIGHT);
 
-_R_FASTLOCK lock;
+R_FASTLOCK lock;
 
 UINT WINAPI _app_print (LPVOID lparam)
 {
 	const HWND hwnd = (HWND)lparam;
 
-	_r_fastlock_acquireexclusive (&lock);
+	_r_fastlock_acquireshared (&lock);
 
 	SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_DELETEALLITEMS, 0, 0);
 
@@ -80,7 +80,7 @@ UINT WINAPI _app_print (LPVOID lparam)
 						InetNtop (AF_INET, &(ipv4->sin_addr), buffer.GetBuffer (INET_ADDRSTRLEN), INET_ADDRSTRLEN);
 						buffer.ReleaseBuffer ();
 
-						_r_listview_additem (hwnd, IDC_LISTVIEW, LAST_VALUE, 0, buffer, LAST_VALUE, 0);
+						_r_listview_additem (hwnd, IDC_LISTVIEW, INVALID_INT, 0, buffer, INVALID_INT, 0);
 					}
 					else if (family == AF_INET6)
 					{
@@ -90,7 +90,7 @@ UINT WINAPI _app_print (LPVOID lparam)
 						InetNtop (AF_INET6, &(ipv6->sin6_addr), buffer.GetBuffer (INET6_ADDRSTRLEN), INET6_ADDRSTRLEN);
 						buffer.ReleaseBuffer ();
 
-						_r_listview_additem (hwnd, IDC_LISTVIEW, LAST_VALUE, 0, buffer, LAST_VALUE, 1);
+						_r_listview_additem (hwnd, IDC_LISTVIEW, INVALID_INT, 0, buffer, INVALID_INT, 1);
 					}
 					else
 					{
@@ -110,12 +110,12 @@ UINT WINAPI _app_print (LPVOID lparam)
 		rstring bufferw;
 
 		if (app.DownloadURL (app.ConfigGet (L"ExternalUrl", EXTERNAL_URL), &bufferw, false, nullptr, 0))
-			_r_listview_additem (hwnd, IDC_LISTVIEW, LAST_VALUE, 0, bufferw, LAST_VALUE, 2);
+			_r_listview_additem (hwnd, IDC_LISTVIEW, INVALID_INT, 0, bufferw, INVALID_INT, 2);
 	}
 
 	_r_status_settext (hwnd, IDC_STATUSBAR, 0, _r_fmt (app.LocaleString (IDS_STATUS, nullptr), _r_listview_getitemcount (hwnd, IDC_LISTVIEW)));
 
-	_r_fastlock_releaseexclusive (&lock);
+	_r_fastlock_releaseshared (&lock);
 
 	return ERROR_SUCCESS;
 }
@@ -129,7 +129,8 @@ void ResizeWindow (HWND hwnd, INT width, INT height)
 
 	_r_wnd_resize (nullptr, GetDlgItem (hwnd, IDC_LISTVIEW), nullptr, 0, 0, width, height - statusbar_height, 0);
 
-	_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, nullptr, width - GetSystemMetrics (SM_CXVSCROLL));
+	GetClientRect (GetDlgItem (hwnd, IDC_LISTVIEW), &rc);
+	_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, nullptr, _R_RECT_WIDTH (&rc));
 
 	SendDlgItemMessage (hwnd, IDC_STATUSBAR, WM_SIZE, 0, 0);
 }
@@ -315,9 +316,9 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				{
 					rstring buffer;
 
-					INT item = -1;
+					INT item = INVALID_INT;
 
-					while ((item = (INT)SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_GETNEXTITEM, item, LVNI_SELECTED)) != -1)
+					while ((item = (INT)SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_GETNEXTITEM, item, LVNI_SELECTED)) != INVALID_INT)
 					{
 						buffer.Append (_r_listview_getitemtext (hwnd, IDC_LISTVIEW, item, 0));
 						buffer.Append (L"\r\n");
