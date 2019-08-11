@@ -23,7 +23,7 @@ UINT WINAPI _app_print (LPVOID lparam)
 
 	_r_fastlock_acquireshared (&lock);
 
-	SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_DELETEALLITEMS, 0, 0);
+	_r_listview_deleteallitems (hwnd, IDC_LISTVIEW);
 
 	WSADATA wsa = {0};
 
@@ -148,7 +148,12 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			// configure listview
 			_r_listview_setstyle (hwnd, IDC_LISTVIEW, LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_LABELTIP);
 
-			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 0, nullptr, 95, LVCFMT_LEFT);
+			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 0, nullptr, -95, LVCFMT_LEFT);
+
+			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 0, L"", 0, 0);
+			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 1, L"", 0, 0);
+			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 2, L"", 0, 0);
+
 			break;
 		}
 
@@ -165,11 +170,10 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		case RM_LOCALIZE:
 		{
 			// configure listview
-			_r_listview_deleteallgroups (hwnd, IDC_LISTVIEW);
 
-			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 0, L"IPv4", 0, 0);
-			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 1, L"IPv6", 0, 0);
-			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 2, app.LocaleString (IDS_GROUP2, nullptr), 0, 0);
+			_r_listview_setgroup (hwnd, IDC_LISTVIEW, 0, L"IPv4", 0, 0);
+			_r_listview_setgroup (hwnd, IDC_LISTVIEW, 1, L"IPv6", 0, 0);
+			_r_listview_setgroup (hwnd, IDC_LISTVIEW, 2, app.LocaleString (IDS_GROUP2, nullptr), 0, 0);
 
 			// localize
 			const HMENU hmenu = GetMenu (hwnd);
