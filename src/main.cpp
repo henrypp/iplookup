@@ -64,37 +64,43 @@ UINT WINAPI _app_print (LPVOID lparam)
 			for (adapter = adapter_addresses; adapter != nullptr; adapter = adapter->Next)
 			{
 				if (IF_TYPE_SOFTWARE_LOOPBACK == adapter->IfType)
-				{
 					continue;
-				}
 
 				for (IP_ADAPTER_UNICAST_ADDRESS* address = adapter->FirstUnicastAddress; address != nullptr; address = address->Next)
 				{
-					auto family = address->Address.lpSockaddr->sa_family;
+					auto af = address->Address.lpSockaddr->sa_family;
 
-					if (family == AF_INET)
+					if (af == AF_INET)
 					{
 						// ipv4
 						PSOCKADDR_IN ipv4 = (PSOCKADDR_IN)(address->Address.lpSockaddr);
 
-						InetNtop (AF_INET, &(ipv4->sin_addr), buffer.GetBuffer (INET_ADDRSTRLEN), INET_ADDRSTRLEN);
+						InetNtop (af, &(ipv4->sin_addr), buffer.GetBuffer (INET_ADDRSTRLEN), INET_ADDRSTRLEN);
 						buffer.ReleaseBuffer ();
 
 						_r_listview_additem (hwnd, IDC_LISTVIEW, INVALID_INT, 0, buffer, INVALID_INT, 0);
 					}
-					else if (family == AF_INET6)
+				}
+			}
+
+			for (adapter = adapter_addresses; adapter != nullptr; adapter = adapter->Next)
+			{
+				if (IF_TYPE_SOFTWARE_LOOPBACK == adapter->IfType)
+					continue;
+
+				for (IP_ADAPTER_UNICAST_ADDRESS* address = adapter->FirstUnicastAddress; address != nullptr; address = address->Next)
+				{
+					auto af = address->Address.lpSockaddr->sa_family;
+
+					if (af == AF_INET6)
 					{
 						// ipv6
 						PSOCKADDR_IN6 ipv6 = (PSOCKADDR_IN6)(address->Address.lpSockaddr);
 
-						InetNtop (AF_INET6, &(ipv6->sin6_addr), buffer.GetBuffer (INET6_ADDRSTRLEN), INET6_ADDRSTRLEN);
+						InetNtop (af, &(ipv6->sin6_addr), buffer.GetBuffer (INET6_ADDRSTRLEN), INET6_ADDRSTRLEN);
 						buffer.ReleaseBuffer ();
 
 						_r_listview_additem (hwnd, IDC_LISTVIEW, INVALID_INT, 0, buffer, INVALID_INT, 1);
-					}
-					else
-					{
-						continue;
 					}
 				}
 			}
@@ -109,8 +115,18 @@ UINT WINAPI _app_print (LPVOID lparam)
 	{
 		rstring bufferw;
 
-		if (app.DownloadURL (app.ConfigGet (L"ExternalUrl", EXTERNAL_URL), &bufferw, false, nullptr, 0))
-			_r_listview_additem (hwnd, IDC_LISTVIEW, INVALID_INT, 0, bufferw, INVALID_INT, 2);
+		LPCWSTR proxy_addr = app.GetProxyConfiguration ();
+		const HINTERNET hsession = _r_inet_createsession (app.GetUserAgent (), proxy_addr);
+
+		if (hsession)
+		{
+			if (_r_inet_downloadurl (hsession, proxy_addr, app.ConfigGet (L"ExternalUrl", EXTERNAL_URL), &bufferw, false, nullptr, 0))
+			{
+				_r_listview_additem (hwnd, IDC_LISTVIEW, INVALID_INT, 0, bufferw, INVALID_INT, 2);
+			}
+
+			_r_inet_close (hsession);
+		}
 	}
 
 	_r_status_settext (hwnd, IDC_STATUSBAR, 0, _r_fmt (app.LocaleString (IDS_STATUS, nullptr), _r_listview_getitemcount (hwnd, IDC_LISTVIEW)));
@@ -129,8 +145,7 @@ void ResizeWindow (HWND hwnd, INT width, INT height)
 
 	_r_wnd_resize (nullptr, GetDlgItem (hwnd, IDC_LISTVIEW), nullptr, 0, 0, width, height - statusbar_height, 0);
 
-	GetClientRect (GetDlgItem (hwnd, IDC_LISTVIEW), &rc);
-	_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, nullptr, _R_RECT_WIDTH (&rc));
+	_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, nullptr, -100);
 
 	SendDlgItemMessage (hwnd, IDC_STATUSBAR, WM_SIZE, 0, 0);
 }
@@ -330,7 +345,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 					if (!buffer.IsEmpty ())
 					{
-						buffer.Trim (L"\r\n");
+						_r_str_trim (buffer, L"\r\n");
 
 						_r_clipboard_set (hwnd, buffer, buffer.GetLength ());
 					}
