@@ -129,9 +129,11 @@ UINT WINAPI _app_print (LPVOID lparam)
 		}
 	}
 
-	_r_status_settext (hwnd, IDC_STATUSBAR, 0, _r_fmt (app.LocaleString (IDS_STATUS, nullptr), _r_listview_getitemcount (hwnd, IDC_LISTVIEW)));
+	_r_status_settext (hwnd, IDC_STATUSBAR, 0, _r_fmt (app.LocaleString (IDS_STATUS, nullptr), _r_listview_getitemcount (hwnd, IDC_LISTVIEW)), nullptr);
 
 	_r_fastlock_releaseshared (&lock);
+
+	_endthreadex (ERROR_SUCCESS);
 
 	return ERROR_SUCCESS;
 }
