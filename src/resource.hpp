@@ -32,6 +32,7 @@
 // Listview Menu
 #define IDM_REFRESH 112
 #define IDM_COPY 113
+#define IDM_SELECT_ALL 114
 
 #define IDX_LANGUAGE 1000
 
