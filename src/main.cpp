@@ -116,11 +116,11 @@ UINT WINAPI _app_print (LPVOID lparam)
 		rstring bufferw;
 
 		LPCWSTR proxy_addr = app.GetProxyConfiguration ();
-		const HINTERNET hsession = _r_inet_createsession (app.GetUserAgent (), proxy_addr);
+		HINTERNET hsession = _r_inet_createsession (app.GetUserAgent (), proxy_addr);
 
 		if (hsession)
 		{
-			if (_r_inet_downloadurl (hsession, proxy_addr, app.ConfigGet (L"ExternalUrl", EXTERNAL_URL), &bufferw, false, nullptr, 0))
+			if (_r_inet_downloadurl (hsession, proxy_addr, app.ConfigGet (L"ExternalUrl", EXTERNAL_URL), (LONG_PTR)&bufferw, false, nullptr, 0))
 			{
 				_r_listview_additem (hwnd, IDC_LISTVIEW, INVALID_INT, 0, bufferw, INVALID_INT, 2);
 			}
@@ -129,7 +129,7 @@ UINT WINAPI _app_print (LPVOID lparam)
 		}
 	}
 
-	_r_status_settext (hwnd, IDC_STATUSBAR, 0, _r_fmt (app.LocaleString (IDS_STATUS, nullptr), _r_listview_getitemcount (hwnd, IDC_LISTVIEW)), nullptr);
+	_r_status_settext (hwnd, IDC_STATUSBAR, 0, _r_fmt (app.LocaleString (IDS_STATUS, nullptr), _r_listview_getitemcount (hwnd, IDC_LISTVIEW)));
 
 	_r_fastlock_releaseshared (&lock);
 
@@ -317,7 +317,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDM_CHECKUPDATES:
 				{
-					app.UpdateCheck (true);
+					app.UpdateCheck (hwnd);
 					break;
 				}
 
@@ -352,6 +352,12 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						_r_clipboard_set (hwnd, buffer, buffer.GetLength ());
 					}
 
+					break;
+				}
+
+				case IDM_SELECT_ALL:
+				{
+					ListView_SetItemState (GetDlgItem (hwnd, IDC_LISTVIEW), INVALID_INT, LVIS_SELECTED, LVIS_SELECTED);
 					break;
 				}
 			}
