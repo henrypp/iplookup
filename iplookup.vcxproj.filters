@@ -52,5 +52,11 @@
     <ClInclude Include="src\main.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\routine\ntapi.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
