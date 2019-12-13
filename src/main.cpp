@@ -78,7 +78,7 @@ UINT WINAPI _app_print (LPVOID lparam)
 						InetNtop (af, &(ipv4->sin_addr), buffer.GetBuffer (INET_ADDRSTRLEN), INET_ADDRSTRLEN);
 						buffer.ReleaseBuffer ();
 
-						_r_listview_additem (hwnd, IDC_LISTVIEW, INVALID_INT, 0, buffer, INVALID_INT, 0);
+						_r_listview_additem (hwnd, IDC_LISTVIEW, INVALID_INT, 0, buffer, I_IMAGENONE, 0);
 					}
 				}
 			}
@@ -100,7 +100,7 @@ UINT WINAPI _app_print (LPVOID lparam)
 						InetNtop (af, &(ipv6->sin6_addr), buffer.GetBuffer (INET6_ADDRSTRLEN), INET6_ADDRSTRLEN);
 						buffer.ReleaseBuffer ();
 
-						_r_listview_additem (hwnd, IDC_LISTVIEW, INVALID_INT, 0, buffer, INVALID_INT, 1);
+						_r_listview_additem (hwnd, IDC_LISTVIEW, INVALID_INT, 0, buffer, I_IMAGENONE, 1);
 					}
 				}
 			}
@@ -122,7 +122,7 @@ UINT WINAPI _app_print (LPVOID lparam)
 		{
 			if (_r_inet_downloadurl (hsession, proxy_addr, app.ConfigGet (L"ExternalUrl", EXTERNAL_URL), (LONG_PTR)&bufferw, false, nullptr, 0))
 			{
-				_r_listview_additem (hwnd, IDC_LISTVIEW, INVALID_INT, 0, bufferw, INVALID_INT, 2);
+				_r_listview_additem (hwnd, IDC_LISTVIEW, INVALID_INT, 0, bufferw, I_IMAGENONE, 2);
 			}
 
 			_r_inet_close (hsession);
