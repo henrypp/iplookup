@@ -145,7 +145,7 @@ void ResizeWindow (HWND hwnd, INT width, INT height)
 
 	const INT statusbar_height = _R_RECT_HEIGHT (&rc);
 
-	_r_wnd_resize (nullptr, GetDlgItem (hwnd, IDC_LISTVIEW), nullptr, 0, 0, width, height - statusbar_height, 0);
+	SetWindowPos (GetDlgItem (hwnd, IDC_LISTVIEW), nullptr, 0, 0, width, height - statusbar_height, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER);
 
 	_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, nullptr, -100);
 
