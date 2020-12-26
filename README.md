@@ -1,6 +1,6 @@
 ## Ip Lookup
 
-![Ip Lookup](https://www.henrypp.org/images/iplookup.png)
+![Ip Lookup](https://www.henrypp.org/images/iplookup.png?sikpik)
 
 Application for displaying list of IP addresses your computer, include external address.
 
@@ -11,4 +11,4 @@ To activate portable mode, create "iplookup.ini" in application folder, or move 
 Website: [www.henrypp.org](https://www.henrypp.org)<br />
 Support: support@henrypp.org<br />
 <br />
-(c) 2011-2019 Henry++
+(c) 2011-2021 Henry++

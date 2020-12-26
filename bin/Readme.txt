@@ -7,4 +7,4 @@ To activate portable mode, create "iplookup.ini" in application folder, or move 
 Website: www.henrypp.org
 Support: support@henrypp.org
 
-(c) 2011-2019 Henry++
+(c) 2011-2021 Henry++
