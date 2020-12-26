@@ -104,9 +104,9 @@ THREAD_API _app_print (PVOID lparam)
 
 			if (hsession)
 			{
-				_r_inet_initializedownload (&info, NULL, NULL, NULL);
+				_r_inet_initializedownload (&info, NULL);
 
-				if (_r_inet_startdownload (hsession, url_string, &info) == ERROR_SUCCESS)
+				if (_r_inet_begindownload (hsession, url_string, &info) == ERROR_SUCCESS)
 				{
 					_r_listview_additemex (hwnd, IDC_LISTVIEW, -1, 0, _r_obj_getstringorempty (info.string), I_IMAGENONE, 2, 0);
 
