@@ -22,24 +22,24 @@
 // Main Menu
 #define IDM_EXIT 104
 #define IDM_ALWAYSONTOP_CHK 105
-#define IDM_CHECKUPDATES_CHK 106
-#define IDM_GETEXTERNALIP_CHK 107
-#define IDM_WEBSITE 108
-#define IDM_DONATE 109
-#define IDM_CHECKUPDATES 110
-#define IDM_ABOUT 111
+#define IDM_CLASSICUI_CHK 106
+#define IDM_CHECKUPDATES_CHK 107
+#define IDM_GETEXTERNALIP_CHK 108
+#define IDM_WEBSITE 109
+#define IDM_DONATE 110
+#define IDM_CHECKUPDATES 111
+#define IDM_ABOUT 112
 
 // Listview Menu
-#define IDM_REFRESH 112
-#define IDM_COPY 113
-#define IDM_SELECT_ALL 114
+#define IDM_REFRESH 113
+#define IDM_COPY 114
+#define IDM_SELECT_ALL 115
 
 #define IDX_LANGUAGE 1000
 
 // Strings
 #define IDS_UPDATE_NO 1
 #define IDS_UPDATE_YES 2
-
 #define IDS_FILE 3
 #define IDS_EXIT 4
 #define IDS_SETTINGS 5
@@ -52,15 +52,12 @@
 #define IDS_DONATE 12
 #define IDS_CHECKUPDATES 13
 #define IDS_ABOUT 14
-
 #define IDS_COPY 15
-
 #define IDS_REFRESH 16
-
 #define IDS_GROUP1 17
 #define IDS_GROUP2 18
-
 #define IDS_STATUS 19
+#define IDS_CLASSICUI_CHK 20
 
 // Icons
 #define IDI_MAIN 100
