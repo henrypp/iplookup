@@ -1,4 +1,4 @@
-// Ip Lookup
+// iplookup
 // Copyright (c) 2011-2021 Henry++
 
 #include <ws2tcpip.h>
