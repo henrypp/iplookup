@@ -13,18 +13,21 @@
 
 #include "resource.h"
 
-R_SPINLOCK lock;
+R_SPINLOCK lock_thread;
 
 THREAD_API _app_print (PVOID lparam)
 {
+	HWND hwnd = (HWND)lparam;
 	WSADATA wsa = {0};
 	WCHAR buffer[128] = {0};
 	PIP_ADAPTER_ADDRESSES adapter_addresses = NULL;
 	PIP_ADAPTER_ADDRESSES adapter = NULL;
-	HWND hwnd = (HWND)lparam;
 	ULONG size = 0;
+	ULONG code;
 
-	_r_spinlock_acquireshared (&lock);
+	_r_spinlock_acquireshared (&lock_thread);
+
+	_r_status_settext (hwnd, IDC_STATUSBAR, 0, L"Loading....");
 
 	_r_listview_deleteallitems (hwnd, IDC_LISTVIEW);
 
@@ -36,9 +39,9 @@ THREAD_API _app_print (PVOID lparam)
 
 			adapter_addresses = _r_mem_allocatezero (size);
 
-			DWORD error = GetAdaptersAddresses (AF_UNSPEC, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME, NULL, adapter_addresses, &size);
+			code = GetAdaptersAddresses (AF_UNSPEC, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME, NULL, adapter_addresses, &size);
 
-			if (error == ERROR_SUCCESS)
+			if (code == ERROR_SUCCESS)
 			{
 				break;
 			}
@@ -46,7 +49,7 @@ THREAD_API _app_print (PVOID lparam)
 			{
 				SAFE_DELETE_MEMORY (adapter_addresses);
 
-				if (error == ERROR_BUFFER_OVERFLOW)
+				if (code == ERROR_BUFFER_OVERFLOW)
 					continue;
 
 				break;
@@ -122,7 +125,7 @@ THREAD_API _app_print (PVOID lparam)
 
 	_r_status_settextformat (hwnd, IDC_STATUSBAR, 0, _r_locale_getstring (IDS_STATUS), _r_listview_getitemcount (hwnd, IDC_LISTVIEW));
 
-	_r_spinlock_releaseshared (&lock);
+	_r_spinlock_releaseshared (&lock_thread);
 
 	return ERROR_SUCCESS;
 }
@@ -147,7 +150,10 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 1, L"", 0, state_mask, state_mask);
 			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 2, L"", 0, state_mask, state_mask);
 
-			_r_spinlock_initialize (&lock);
+			_r_spinlock_initialize (&lock_thread);
+
+			// refresh list
+			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
 
 			break;
 		}
@@ -194,9 +200,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			_r_listview_setgroup (hwnd, IDC_LISTVIEW, 1, L"IPv6", 0, 0);
 			_r_listview_setgroup (hwnd, IDC_LISTVIEW, 2, _r_locale_getstring (IDS_GROUP2), 0, 0);
 
-			// refresh list
-			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
-
 			break;
 		}
 
@@ -218,7 +221,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			_r_menu_setitemtextformat (hmenu, IDM_REFRESH, FALSE, L"%s\tF5", _r_locale_getstring (IDS_REFRESH));
 			_r_menu_setitemtextformat (hmenu, IDM_COPY, FALSE, L"%s\tCtrl+C", _r_locale_getstring (IDS_COPY));
 
-			if (_r_spinlock_islocked (&lock))
+			if (_r_spinlock_islocked (&lock_thread))
 				_r_menu_enableitem (hsubmenu, IDM_REFRESH, MF_BYCOMMAND, FALSE);
 
 			if (!SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_GETSELECTEDCOUNT, 0, 0))
@@ -299,7 +302,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDM_REFRESH:
 				{
-					if (!_r_spinlock_islocked (&lock))
+					if (!_r_spinlock_islocked (&lock_thread))
 						_r_sys_createthread2 (&_app_print, hwnd);
 
 					break;

@@ -12,6 +12,6 @@
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "ws2_32.lib")
 
-#define LANG_MENU 6
+#define LANG_MENU 5
 
 #define EXTERNAL_URL L"https://api.ipify.org/?format=text" 
