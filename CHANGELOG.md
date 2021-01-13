@@ -1,7 +1,8 @@
-v1.6.1 (x March 2019)
-- new ui
-- updated to the latest sdk
+v1.7 (13 January 2021)
+- updated ui
+- updated project sdk
 - updated localization
+- removed update checking
 
 v1.6 (7 September 2016)
 - previous build fixes
