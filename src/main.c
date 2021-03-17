@@ -107,13 +107,13 @@ THREAD_API _app_print (PVOID lparam)
 
 			if (hsession)
 			{
-				_r_inet_initializedownload (&info, NULL);
+				_r_inet_initializedownload (&info, NULL, NULL, NULL);
 
 				if (_r_inet_begindownload (hsession, url_string, &info) == ERROR_SUCCESS)
 				{
 					_r_listview_additemex (hwnd, IDC_LISTVIEW, -1, 0, _r_obj_getstringorempty (info.string), I_IMAGENONE, 2, 0);
 
-					_r_inet_finaldownload (&info);
+					_r_inet_destroydownload (&info);
 				}
 
 				_r_inet_close (hsession);
@@ -224,7 +224,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			if (_r_spinlock_islocked (&lock_thread))
 				_r_menu_enableitem (hsubmenu, IDM_REFRESH, MF_BYCOMMAND, FALSE);
 
-			if (!SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_GETSELECTEDCOUNT, 0, 0))
+			if (!_r_listview_getselectedcount (hwnd, IDC_LISTVIEW))
 				_r_menu_enableitem (hsubmenu, IDM_COPY, MF_BYCOMMAND, FALSE);
 
 			_r_menu_popup (hsubmenu, hwnd, NULL, TRUE);
