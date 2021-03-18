@@ -18,10 +18,10 @@ R_SPINLOCK lock_thread;
 THREAD_API _app_print (PVOID lparam)
 {
 	HWND hwnd = (HWND)lparam;
-	WSADATA wsa = {0};
-	WCHAR buffer[128] = {0};
-	PIP_ADAPTER_ADDRESSES adapter_addresses = NULL;
-	PIP_ADAPTER_ADDRESSES adapter = NULL;
+	WSADATA wsa;
+	WCHAR buffer[128];
+	PIP_ADAPTER_ADDRESSES adapter_addresses;
+	PIP_ADAPTER_ADDRESSES adapter;
 	ULONG size = 0;
 	ULONG code;
 
@@ -72,23 +72,21 @@ THREAD_API _app_print (PVOID lparam)
 						// ipv4
 						PSOCKADDR_IN ipv4 = (PSOCKADDR_IN)address->Address.lpSockaddr;
 
-						InetNtop (af, &(ipv4->sin_addr), buffer, RTL_NUMBER_OF (buffer));
-
-						_r_listview_additemex (hwnd, IDC_LISTVIEW, -1, 0, buffer, I_IMAGENONE, 0, 0);
+						if (InetNtop (af, &(ipv4->sin_addr), buffer, RTL_NUMBER_OF (buffer)))
+							_r_listview_additemex (hwnd, IDC_LISTVIEW, -1, 0, buffer, I_IMAGENONE, 0, 0);
 					}
 					else if (af == AF_INET6)
 					{
 						// ipv6
 						PSOCKADDR_IN6 ipv6 = (PSOCKADDR_IN6)address->Address.lpSockaddr;
 
-						InetNtop (af, &(ipv6->sin6_addr), buffer, RTL_NUMBER_OF (buffer));
-
-						_r_listview_additemex (hwnd, IDC_LISTVIEW, -1, 0, buffer, I_IMAGENONE, 1, 0);
+						if (InetNtop (af, &(ipv6->sin6_addr), buffer, RTL_NUMBER_OF (buffer)))
+							_r_listview_additemex (hwnd, IDC_LISTVIEW, -1, 0, buffer, I_IMAGENONE, 1, 0);
 					}
 				}
 			}
 
-			SAFE_DELETE_MEMORY (adapter_addresses);
+			_r_mem_free (adapter_addresses);
 		}
 
 		WSACleanup ();
