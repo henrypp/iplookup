@@ -130,6 +130,8 @@ THREAD_API _app_print (PVOID lparam)
 
 INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
+	static R_LAYOUT_MANAGER layout_manager = {0};
+
 	switch (msg)
 	{
 		case WM_INITDIALOG:
@@ -149,6 +151,8 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 2, L"", 0, state_mask, state_mask);
 
 			_r_spinlock_initialize (&lock_thread);
+
+			_r_layout_initializemanager (&layout_manager, hwnd);
 
 			// refresh list
 			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
@@ -204,6 +208,22 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		case WM_DESTROY:
 		{
 			PostQuitMessage (0);
+			break;
+		}
+
+		case WM_SIZE:
+		{
+			if (!_r_layout_resize (&layout_manager, wparam))
+				break;
+
+			_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, NULL, -100);
+
+			break;
+		}
+
+		case WM_GETMINMAXINFO:
+		{
+			_r_layout_resizeminimumsize (&layout_manager, lparam);
 			break;
 		}
 
