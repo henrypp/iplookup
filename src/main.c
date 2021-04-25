@@ -24,6 +24,7 @@ THREAD_API _app_print (PVOID lparam)
 	PIP_ADAPTER_ADDRESSES adapter;
 	ULONG size = 0;
 	ULONG code;
+	INT item_id;
 
 	_r_spinlock_acquireshared (&lock_thread);
 
@@ -73,7 +74,10 @@ THREAD_API _app_print (PVOID lparam)
 						PSOCKADDR_IN ipv4 = (PSOCKADDR_IN)address->Address.lpSockaddr;
 
 						if (InetNtop (af, &(ipv4->sin_addr), buffer, RTL_NUMBER_OF (buffer)))
-							_r_listview_additemex (hwnd, IDC_LISTVIEW, -1, 0, buffer, I_IMAGENONE, 0, 0);
+						{
+							item_id = _r_listview_additemex (hwnd, IDC_LISTVIEW, -1, 0, buffer, I_IMAGENONE, 0, 0);
+							_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, adapter->Description);
+						}
 					}
 					else if (af == AF_INET6)
 					{
@@ -81,7 +85,10 @@ THREAD_API _app_print (PVOID lparam)
 						PSOCKADDR_IN6 ipv6 = (PSOCKADDR_IN6)address->Address.lpSockaddr;
 
 						if (InetNtop (af, &(ipv6->sin6_addr), buffer, RTL_NUMBER_OF (buffer)))
-							_r_listview_additemex (hwnd, IDC_LISTVIEW, -1, 0, buffer, I_IMAGENONE, 1, 0);
+						{
+							item_id = _r_listview_additemex (hwnd, IDC_LISTVIEW, -1, 0, buffer, I_IMAGENONE, 1, 0);
+							_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, adapter->Description);
+						}
 					}
 				}
 			}
@@ -98,28 +105,30 @@ THREAD_API _app_print (PVOID lparam)
 
 		if (url_string)
 		{
-			R_DOWNLOAD_INFO info;
+			R_DOWNLOAD_INFO download_info;
 			HINTERNET hsession;
 
 			hsession = _r_inet_createsession (_r_app_getuseragent ());
 
 			if (hsession)
 			{
-				_r_inet_initializedownload (&info, NULL, NULL, NULL);
+				_r_inet_initializedownload (&download_info, NULL, NULL, NULL);
 
-				if (_r_inet_begindownload (hsession, url_string, &info) == ERROR_SUCCESS)
+				if (_r_inet_begindownload (hsession, url_string, &download_info) == ERROR_SUCCESS)
 				{
-					_r_listview_additemex (hwnd, IDC_LISTVIEW, -1, 0, _r_obj_getstringorempty (info.string), I_IMAGENONE, 2, 0);
-
-					_r_inet_destroydownload (&info);
+					item_id = _r_listview_additemex (hwnd, IDC_LISTVIEW, -1, 0, _r_obj_getstringorempty (download_info.string), I_IMAGENONE, 2, 0);
+					_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, url_string);
 				}
+
+				_r_inet_destroydownload (&download_info);
 
 				_r_inet_close (hsession);
 			}
 		}
 	}
 
-	_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, NULL, -100);
+	_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, NULL, -40);
+	_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 1, NULL, -60);
 
 	_r_status_settextformat (hwnd, IDC_STATUSBAR, 0, _r_locale_getstring (IDS_STATUS), _r_listview_getitemcount (hwnd, IDC_LISTVIEW));
 
@@ -139,7 +148,8 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			// configure listview
 			_r_listview_setstyle (hwnd, IDC_LISTVIEW, LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_LABELTIP, TRUE);
 
-			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 0, NULL, -95, LVCFMT_LEFT);
+			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 0, NULL, 10, LVCFMT_LEFT);
+			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 1, NULL, 10, LVCFMT_LEFT);
 
 			UINT state_mask = 0;
 
@@ -216,7 +226,8 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			if (!_r_layout_resize (&layout_manager, wparam))
 				break;
 
-			_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, NULL, -100);
+			_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, NULL, -40);
+			_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 1, NULL, -60);
 
 			break;
 		}
