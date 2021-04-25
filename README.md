@@ -11,7 +11,7 @@
 -------
 
 <p align="center">
-	<img src="https://www.henrypp.org/images/iplookup.png?upd" />
+	<img src="https://www.henrypp.org/images/iplookup.png?updimg" />
 </p>
 
 ### Description:
