@@ -158,6 +158,7 @@
       <SDLCheck>true</SDLCheck>
       <IntelJCCErratum>true</IntelJCCErratum>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <GuardEHContMetadata>true</GuardEHContMetadata>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -229,6 +230,7 @@
       <SDLCheck>true</SDLCheck>
       <IntelJCCErratum>true</IntelJCCErratum>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <GuardEHContMetadata>true</GuardEHContMetadata>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
