@@ -1,3 +1,7 @@
+v1.7.2 (26 October 2021)
+- updated project sdk
+- updated localization
+
 v1.7.1 (25 April 2021)
 - added adapter description column
 - added window resizing support
