@@ -5,6 +5,7 @@
 #include <winsock2.h>
 #include <ws2ipdef.h>
 #include <iphlpapi.h>
+#include <mstcpip.h>
 
 #include "routine.h"
 
@@ -13,11 +14,11 @@
 
 #include "resource.h"
 
-R_QUEUED_LOCK lock_thread = PR_QUEUED_LOCK_INIT;
+volatile LONG lock_thread = 0;
 
 NTSTATUS NTAPI _app_print (PVOID lparam)
 {
-	HWND hwnd = (HWND)lparam;
+	HWND hwnd;
 	WSADATA wsa;
 	WCHAR buffer[128];
 	PIP_ADAPTER_ADDRESSES adapter_addresses;
@@ -30,7 +31,9 @@ NTSTATUS NTAPI _app_print (PVOID lparam)
 	HINTERNET hsession;
 	PR_STRING url_string;
 
-	_r_queuedlock_acquireshared (&lock_thread);
+	hwnd = (HWND)lparam;
+
+	InterlockedIncrement (&lock_thread);
 
 	_r_status_settext (hwnd, IDC_STATUSBAR, 0, L"Loading....");
 
@@ -38,14 +41,15 @@ NTSTATUS NTAPI _app_print (PVOID lparam)
 
 	item_id = 0;
 
-	if (WSAStartup (WINSOCK_VERSION, &wsa) == ERROR_SUCCESS)
+	code = WSAStartup (WINSOCK_VERSION, &wsa);
+
+	if (code == ERROR_SUCCESS)
 	{
 		size = 0;
 
 		while (TRUE)
 		{
 			size += 1024;
-
 			adapter_addresses = _r_mem_allocatezero (size);
 
 			code = GetAdaptersAddresses (AF_UNSPEC, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME, NULL, adapter_addresses, &size);
@@ -67,6 +71,9 @@ NTSTATUS NTAPI _app_print (PVOID lparam)
 
 		if (adapter_addresses)
 		{
+			ADDRESS_FAMILY af;
+			ULONG buffer_length;
+
 			for (adapter = adapter_addresses; adapter != NULL; adapter = adapter->Next)
 			{
 				if (IF_TYPE_SOFTWARE_LOOPBACK == adapter->IfType)
@@ -74,14 +81,17 @@ NTSTATUS NTAPI _app_print (PVOID lparam)
 
 				for (IP_ADAPTER_UNICAST_ADDRESS* address = adapter->FirstUnicastAddress; address != NULL; address = address->Next)
 				{
-					ADDRESS_FAMILY af = address->Address.lpSockaddr->sa_family;
+					af = address->Address.lpSockaddr->sa_family;
 
 					if (af == AF_INET)
 					{
 						// ipv4
-						PSOCKADDR_IN ipv4 = (PSOCKADDR_IN)address->Address.lpSockaddr;
+						PSOCKADDR_IN ipv4;
 
-						if (InetNtop (af, &(ipv4->sin_addr), buffer, RTL_NUMBER_OF (buffer)))
+						ipv4 = (PSOCKADDR_IN)address->Address.lpSockaddr;
+						buffer_length = RTL_NUMBER_OF (buffer);
+
+						if (NT_SUCCESS (RtlIpv4AddressToStringEx (&(ipv4->sin_addr), 0, buffer, &buffer_length)))
 						{
 							_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, buffer, I_IMAGENONE, 0, 0);
 							_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, adapter->Description);
@@ -92,9 +102,12 @@ NTSTATUS NTAPI _app_print (PVOID lparam)
 					else if (af == AF_INET6)
 					{
 						// ipv6
-						PSOCKADDR_IN6 ipv6 = (PSOCKADDR_IN6)address->Address.lpSockaddr;
+						PSOCKADDR_IN6 ipv6;
 
-						if (InetNtop (af, &(ipv6->sin6_addr), buffer, RTL_NUMBER_OF (buffer)))
+						ipv6 = (PSOCKADDR_IN6)address->Address.lpSockaddr;
+						buffer_length = RTL_NUMBER_OF (buffer);
+
+						if (NT_SUCCESS (RtlIpv6AddressToStringEx (&(ipv6->sin6_addr), 0, 0, buffer, &buffer_length)))
 						{
 							_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, buffer, I_IMAGENONE, 1, 0);
 							_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, adapter->Description);
@@ -145,9 +158,9 @@ NTSTATUS NTAPI _app_print (PVOID lparam)
 
 	_r_status_settextformat (hwnd, IDC_STATUSBAR, 0, _r_locale_getstring (IDS_STATUS), _r_listview_getitemcount (hwnd, IDC_LISTVIEW));
 
-	_r_queuedlock_releaseshared (&lock_thread);
+	InterlockedDecrement (&lock_thread);
 
-	return ERROR_SUCCESS;
+	return STATUS_SUCCESS;
 }
 
 INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -201,9 +214,14 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 		case RM_LOCALIZE:
 		{
-			// localize
 			HMENU hmenu;
 
+			// configure listview
+			_r_listview_setgroup (hwnd, IDC_LISTVIEW, 0, L"IPv4", 0, 0);
+			_r_listview_setgroup (hwnd, IDC_LISTVIEW, 1, L"IPv6", 0, 0);
+			_r_listview_setgroup (hwnd, IDC_LISTVIEW, 2, _r_locale_getstring (IDS_GROUP2), 0, 0);
+
+			// localize menu
 			hmenu = GetMenu (hwnd);
 
 			if (hmenu)
@@ -221,11 +239,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				_r_locale_enum (GetSubMenu (hmenu, 1), LANG_MENU, IDX_LANGUAGE); // enum localizations
 			}
-
-			// configure listview
-			_r_listview_setgroup (hwnd, IDC_LISTVIEW, 0, L"IPv4", 0, 0);
-			_r_listview_setgroup (hwnd, IDC_LISTVIEW, 1, L"IPv6", 0, 0);
-			_r_listview_setgroup (hwnd, IDC_LISTVIEW, 2, _r_locale_getstring (IDS_GROUP2), 0, 0);
 
 			break;
 		}
@@ -263,41 +276,44 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 			hmenu = LoadMenu (NULL, MAKEINTRESOURCE (IDM_LISTVIEW));
 
-			if (hmenu)
+			if (!hmenu)
+				break;
+
+			hsubmenu = GetSubMenu (hmenu, 0);
+
+			if (hsubmenu)
 			{
-				hsubmenu = GetSubMenu (hmenu, 0);
+				// localize
+				_r_menu_setitemtextformat (hmenu, IDM_REFRESH, FALSE, L"%s\tF5", _r_locale_getstring (IDS_REFRESH));
+				_r_menu_setitemtextformat (hmenu, IDM_COPY, FALSE, L"%s\tCtrl+C", _r_locale_getstring (IDS_COPY));
 
-				if (hsubmenu)
-				{
-					// localize
-					_r_menu_setitemtextformat (hmenu, IDM_REFRESH, FALSE, L"%s\tF5", _r_locale_getstring (IDS_REFRESH));
-					_r_menu_setitemtextformat (hmenu, IDM_COPY, FALSE, L"%s\tCtrl+C", _r_locale_getstring (IDS_COPY));
+				if (InterlockedCompareExchange (&lock_thread, 0, 0) != 0)
+					_r_menu_enableitem (hsubmenu, IDM_REFRESH, MF_BYCOMMAND, FALSE);
 
-					if (_r_queuedlock_islocked (&lock_thread))
-						_r_menu_enableitem (hsubmenu, IDM_REFRESH, MF_BYCOMMAND, FALSE);
+				if (!_r_listview_getselectedcount (hwnd, IDC_LISTVIEW))
+					_r_menu_enableitem (hsubmenu, IDM_COPY, MF_BYCOMMAND, FALSE);
 
-					if (!_r_listview_getselectedcount (hwnd, IDC_LISTVIEW))
-						_r_menu_enableitem (hsubmenu, IDM_COPY, MF_BYCOMMAND, FALSE);
-
-					_r_menu_popup (hsubmenu, hwnd, NULL, TRUE);
-				}
-
-				DestroyMenu (hmenu);
+				_r_menu_popup (hsubmenu, hwnd, NULL, TRUE);
 			}
+
+			DestroyMenu (hmenu);
 
 			break;
 		}
 
 		case WM_COMMAND:
 		{
-			if (HIWORD (wparam) == 0 && LOWORD (wparam) >= IDX_LANGUAGE && LOWORD (wparam) <= IDX_LANGUAGE + _r_locale_getcount ())
+			INT ctrl_id = LOWORD (wparam);
+			INT notify_code = HIWORD (wparam);
+
+			if (notify_code == 0 && ctrl_id >= IDX_LANGUAGE && ctrl_id <= IDX_LANGUAGE + (INT_PTR)_r_locale_getcount ())
 			{
-				_r_locale_apply (GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), LANG_MENU), LOWORD (wparam), IDX_LANGUAGE);
+				_r_locale_apply (GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), LANG_MENU), ctrl_id, IDX_LANGUAGE);
 
 				return FALSE;
 			}
 
-			switch (LOWORD (wparam))
+			switch (ctrl_id)
 			{
 				case IDCANCEL: // process Esc key
 				case IDM_EXIT:
@@ -344,8 +360,8 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDM_REFRESH:
 				{
-					if (!_r_queuedlock_islocked (&lock_thread))
-						_r_sys_createthread2 (&_app_print, hwnd);
+					if (InterlockedCompareExchange (&lock_thread, 0, 0) == 0)
+						_r_sys_createthread (&_app_print, hwnd, NULL, NULL);
 
 					break;
 				}
@@ -386,7 +402,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDM_SELECT_ALL:
 				{
-					ListView_SetItemState (GetDlgItem (hwnd, IDC_LISTVIEW), -1, LVIS_SELECTED, LVIS_SELECTED);
+					_r_listview_setitemstate (hwnd, IDC_LISTVIEW, -1, LVIS_SELECTED, LVIS_SELECTED);
 					break;
 				}
 			}
