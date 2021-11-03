@@ -416,33 +416,15 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 INT APIENTRY wWinMain (_In_ HINSTANCE hinst, _In_opt_ HINSTANCE prev_hinst, _In_ LPWSTR cmdline, _In_ INT show_cmd)
 {
-	MSG msg;
-	HACCEL haccel;
 	HWND hwnd;
 
-	if (_r_app_initialize ())
-	{
-		hwnd = _r_app_createwindow (IDD_MAIN, IDI_MAIN, &DlgProc);
+	if (!_r_app_initialize ())
+		return ERROR_APP_INIT_FAILURE;
 
-		if (hwnd)
-		{
-			haccel = LoadAccelerators (_r_sys_getimagebase (), MAKEINTRESOURCE (IDA_MAIN));
+	hwnd = _r_app_createwindow (MAKEINTRESOURCE (IDD_MAIN), MAKEINTRESOURCE (IDI_MAIN), &DlgProc);
 
-			if (haccel)
-			{
-				while (GetMessage (&msg, NULL, 0, 0) > 0)
-				{
-					if (!TranslateAccelerator (hwnd, haccel, &msg) && !IsDialogMessage (hwnd, &msg))
-					{
-						TranslateMessage (&msg);
-						DispatchMessage (&msg);
-					}
-				}
+	if (!hwnd)
+		return ERROR_APP_INIT_FAILURE;
 
-				DestroyAcceleratorTable (haccel);
-			}
-		}
-	}
-
-	return ERROR_SUCCESS;
+	return _r_wnd_messageloop (hwnd, MAKEINTRESOURCE (IDA_MAIN));
 }
