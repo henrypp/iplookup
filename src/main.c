@@ -126,30 +126,33 @@ NTSTATUS NTAPI _app_print (PVOID lparam)
 
 	if (_r_config_getboolean (L"GetExternalIp", FALSE))
 	{
-		url_string = _r_config_getstring (L"ExternalUrl", EXTERNAL_URL);
-
-		if (url_string)
+		if (_r_sys_isosversiongreaterorequal (WINDOWS_7))
 		{
-			hsession = _r_inet_createsession (_r_app_getuseragent ());
+			url_string = _r_config_getstring (L"ExternalUrl", EXTERNAL_URL);
 
-			if (hsession)
+			if (url_string)
 			{
-				_r_inet_initializedownload (&download_info, NULL, NULL, NULL);
+				hsession = _r_inet_createsession (_r_app_getuseragent ());
 
-				if (_r_inet_begindownload (hsession, url_string->buffer, &download_info) == ERROR_SUCCESS)
+				if (hsession)
 				{
-					_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, _r_obj_getstringorempty (download_info.string), I_IMAGENONE, 2, 0);
-					_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, url_string->buffer);
+					_r_inet_initializedownload (&download_info, NULL, NULL, NULL);
 
-					item_id += 1;
+					if (_r_inet_begindownload (hsession, url_string->buffer, &download_info) == ERROR_SUCCESS)
+					{
+						_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, _r_obj_getstringorempty (download_info.string), I_IMAGENONE, 2, 0);
+						_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, url_string->buffer);
+
+						item_id += 1;
+					}
+
+					_r_inet_destroydownload (&download_info);
+
+					_r_inet_close (hsession);
 				}
 
-				_r_inet_destroydownload (&download_info);
-
-				_r_inet_close (hsession);
+				_r_obj_dereference (url_string);
 			}
-
-			_r_obj_dereference (url_string);
 		}
 	}
 
@@ -176,17 +179,17 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			// configure listview
 			_r_listview_setstyle (hwnd, IDC_LISTVIEW, LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_LABELTIP, TRUE);
 
-			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 0, NULL, 10, LVCFMT_LEFT);
-			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 1, NULL, 10, LVCFMT_LEFT);
+			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 0, L"", 10, LVCFMT_LEFT);
+			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 1, L"", 10, LVCFMT_LEFT);
 
 			state_mask = 0;
 
 			if (_r_sys_isosversiongreaterorequal (WINDOWS_VISTA))
 				state_mask = LVGS_COLLAPSIBLE;
 
-			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 0, L"", 0, state_mask, state_mask);
-			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 1, L"", 0, state_mask, state_mask);
-			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 2, L"", 0, state_mask, state_mask);
+			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 0, L"IPv4", 0, state_mask, state_mask);
+			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 1, L"IPv6", 0, state_mask, state_mask);
+			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 2, _r_locale_getstring (IDS_GROUP2), 0, state_mask, state_mask);
 
 			_r_layout_initializemanager (&layout_manager, hwnd);
 
@@ -207,6 +210,9 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			{
 				CheckMenuItem (hmenu, IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (_r_config_getboolean (L"AlwaysOnTop", FALSE) ? MF_CHECKED : MF_UNCHECKED));
 				CheckMenuItem (hmenu, IDM_GETEXTERNALIP_CHK, MF_BYCOMMAND | (_r_config_getboolean (L"GetExternalIp", FALSE) ? MF_CHECKED : MF_UNCHECKED));
+
+				if (!_r_sys_isosversiongreaterorequal (WINDOWS_7))
+					_r_menu_enableitem (hmenu, IDM_GETEXTERNALIP_CHK, MF_BYCOMMAND, FALSE);
 			}
 
 			break;
@@ -306,7 +312,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			INT ctrl_id = LOWORD (wparam);
 			INT notify_code = HIWORD (wparam);
 
-			if (notify_code == 0 && ctrl_id >= IDX_LANGUAGE && ctrl_id <= IDX_LANGUAGE + (INT_PTR)_r_locale_getcount ())
+			if (notify_code == 0 && ctrl_id >= IDX_LANGUAGE && ctrl_id <= IDX_LANGUAGE + (INT_PTR)_r_locale_getcount () + 1)
 			{
 				_r_locale_apply (GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), LANG_MENU), ctrl_id, IDX_LANGUAGE);
 
