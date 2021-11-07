@@ -138,7 +138,7 @@ NTSTATUS NTAPI _app_print (PVOID lparam)
 				{
 					_r_inet_initializedownload (&download_info, NULL, NULL, NULL);
 
-					if (_r_inet_begindownload (hsession, url_string->buffer, &download_info) == ERROR_SUCCESS)
+					if (_r_inet_begindownload (hsession, url_string, &download_info) == ERROR_SUCCESS)
 					{
 						_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, _r_obj_getstringorempty (download_info.string), I_IMAGENONE, 2, 0);
 						_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, url_string->buffer);
