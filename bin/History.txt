@@ -1,3 +1,6 @@
+v1.7.3 (7 November 2021)
+- fixed windows xp support
+
 v1.7.2 (26 October 2021)
 - added arm64 build
 - updated project sdk
