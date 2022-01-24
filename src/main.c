@@ -136,11 +136,11 @@ NTSTATUS NTAPI _app_print (PVOID lparam)
 
 				if (hsession)
 				{
-					_r_inet_initializedownload (&download_info, NULL, NULL, NULL);
+					_r_inet_initializedownload (&download_info);
 
 					if (_r_inet_begindownload (hsession, url_string, &download_info) == ERROR_SUCCESS)
 					{
-						_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, _r_obj_getstringorempty (download_info.string), I_IMAGENONE, 2, 0);
+						_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, _r_obj_getstringorempty (download_info.u.string), I_IMAGENONE, 2, 0);
 						_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, url_string->buffer);
 
 						item_id += 1;
@@ -427,7 +427,7 @@ INT APIENTRY wWinMain (_In_ HINSTANCE hinst, _In_opt_ HINSTANCE prev_hinst, _In_
 	if (!_r_app_initialize ())
 		return ERROR_APP_INIT_FAILURE;
 
-	hwnd = _r_app_createwindow (MAKEINTRESOURCE (IDD_MAIN), MAKEINTRESOURCE (IDI_MAIN), &DlgProc);
+	hwnd = _r_app_createwindow (hinst, MAKEINTRESOURCE (IDD_MAIN), MAKEINTRESOURCE (IDI_MAIN), &DlgProc);
 
 	if (!hwnd)
 		return ERROR_APP_INIT_FAILURE;
