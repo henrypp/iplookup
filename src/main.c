@@ -1,5 +1,5 @@
 // iplookup
-// Copyright (c) 2011-2021 Henry++
+// Copyright (c) 2011-2022 Henry++
 
 #include <ws2tcpip.h>
 #include <winsock2.h>
@@ -16,13 +16,20 @@
 
 volatile LONG lock_thread = 0;
 
-NTSTATUS NTAPI _app_print (PVOID lparam)
+NTSTATUS NTAPI _app_print (
+	_In_ PVOID lparam
+)
 {
 	HWND hwnd;
 	WSADATA wsa;
 	WCHAR buffer[128];
 	PIP_ADAPTER_ADDRESSES adapter_addresses;
 	PIP_ADAPTER_ADDRESSES adapter;
+	IP_ADAPTER_UNICAST_ADDRESS* address;
+	PSOCKADDR_IN ipv4;
+	PSOCKADDR_IN6 ipv6;
+	ADDRESS_FAMILY af;
+	ULONG buffer_length;
 	ULONG size;
 	ULONG code;
 	INT item_id;
@@ -52,7 +59,13 @@ NTSTATUS NTAPI _app_print (PVOID lparam)
 			size += 1024;
 			adapter_addresses = _r_mem_allocatezero (size);
 
-			code = GetAdaptersAddresses (AF_UNSPEC, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME, NULL, adapter_addresses, &size);
+			code = GetAdaptersAddresses (
+				AF_UNSPEC,
+				GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME,
+				NULL,
+				adapter_addresses,
+				&size
+			);
 
 			if (code == ERROR_SUCCESS)
 			{
@@ -71,23 +84,18 @@ NTSTATUS NTAPI _app_print (PVOID lparam)
 
 		if (adapter_addresses)
 		{
-			ADDRESS_FAMILY af;
-			ULONG buffer_length;
-
 			for (adapter = adapter_addresses; adapter != NULL; adapter = adapter->Next)
 			{
 				if (IF_TYPE_SOFTWARE_LOOPBACK == adapter->IfType)
 					continue;
 
-				for (IP_ADAPTER_UNICAST_ADDRESS* address = adapter->FirstUnicastAddress; address != NULL; address = address->Next)
+				for (address = adapter->FirstUnicastAddress; address != NULL; address = address->Next)
 				{
 					af = address->Address.lpSockaddr->sa_family;
 
 					if (af == AF_INET)
 					{
 						// ipv4
-						PSOCKADDR_IN ipv4;
-
 						ipv4 = (PSOCKADDR_IN)address->Address.lpSockaddr;
 						buffer_length = RTL_NUMBER_OF (buffer);
 
@@ -102,8 +110,6 @@ NTSTATUS NTAPI _app_print (PVOID lparam)
 					else if (af == AF_INET6)
 					{
 						// ipv6
-						PSOCKADDR_IN6 ipv6;
-
 						ipv6 = (PSOCKADDR_IN6)address->Address.lpSockaddr;
 						buffer_length = RTL_NUMBER_OF (buffer);
 
@@ -166,7 +172,12 @@ NTSTATUS NTAPI _app_print (PVOID lparam)
 	return STATUS_SUCCESS;
 }
 
-INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+INT_PTR CALLBACK DlgProc (
+	_In_ HWND hwnd,
+	_In_ UINT msg,
+	_In_ WPARAM wparam,
+	_In_ LPARAM lparam
+)
 {
 	static R_LAYOUT_MANAGER layout_manager = {0};
 
@@ -420,7 +431,12 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	return FALSE;
 }
 
-INT APIENTRY wWinMain (_In_ HINSTANCE hinst, _In_opt_ HINSTANCE prev_hinst, _In_ LPWSTR cmdline, _In_ INT show_cmd)
+INT APIENTRY wWinMain (
+	_In_ HINSTANCE hinst,
+	_In_opt_ HINSTANCE prev_hinst,
+	_In_ LPWSTR cmdline,
+	_In_ INT show_cmd
+)
 {
 	HWND hwnd;
 
