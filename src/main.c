@@ -378,7 +378,7 @@ INT_PTR CALLBACK DlgProc (
 				case IDM_REFRESH:
 				{
 					if (InterlockedCompareExchange (&lock_thread, 0, 0) == 0)
-						_r_sys_createthread (&_app_print, hwnd, NULL, NULL);
+						_r_sys_createthread (&_app_print, hwnd, NULL, NULL, NULL);
 
 					break;
 				}
