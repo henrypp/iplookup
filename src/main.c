@@ -31,35 +31,30 @@ NTSTATUS NTAPI _app_print (
 	ADDRESS_FAMILY af;
 	WSADATA wsa;
 	ULONG buffer_length;
-	ULONG size;
-	ULONG code;
-	INT item_id;
+	ULONG size = 0;
+	INT item_id = 0;
 	HINTERNET hsession;
 	HWND hwnd;
 	NTSTATUS status;
 
 	hwnd = (HWND)lparam;
 
-	InterlockedIncrement (&lock_thread);
+	_InterlockedIncrement (&lock_thread);
 
 	_r_status_settext (hwnd, IDC_STATUSBAR, 0, L"Loading....");
 
 	_r_listview_deleteallitems (hwnd, IDC_LISTVIEW);
 
-	item_id = 0;
+	status = WSAStartup (WINSOCK_VERSION, &wsa);
 
-	code = WSAStartup (WINSOCK_VERSION, &wsa);
-
-	if (code == ERROR_SUCCESS)
+	if (status == ERROR_SUCCESS)
 	{
-		size = 0;
-
 		while (TRUE)
 		{
 			size += 1024;
-			adapter_addresses = _r_mem_allocatezero (size);
+			adapter_addresses = _r_mem_allocate (size);
 
-			code = GetAdaptersAddresses (
+			status = GetAdaptersAddresses (
 				AF_UNSPEC,
 				GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME,
 				NULL,
@@ -67,7 +62,7 @@ NTSTATUS NTAPI _app_print (
 				&size
 			);
 
-			if (code == ERROR_SUCCESS)
+			if (status == ERROR_SUCCESS)
 			{
 				break;
 			}
@@ -75,7 +70,7 @@ NTSTATUS NTAPI _app_print (
 			{
 				SAFE_DELETE_MEMORY (adapter_addresses);
 
-				if (code == ERROR_BUFFER_OVERFLOW)
+				if (status == ERROR_BUFFER_OVERFLOW)
 					continue;
 
 				break;
@@ -138,36 +133,33 @@ NTSTATUS NTAPI _app_print (
 
 	if (_r_config_getboolean (L"GetExternalIp", FALSE))
 	{
-		if (_r_sys_isosversiongreaterorequal (WINDOWS_7))
+		url_string = _r_config_getstring (L"ExternalUrl", EXTERNAL_URL);
+
+		if (url_string)
 		{
-			url_string = _r_config_getstring (L"ExternalUrl", EXTERNAL_URL);
+			hsession = _r_inet_createsession (_r_app_getuseragent ());
 
-			if (url_string)
+			if (hsession)
 			{
-				hsession = _r_inet_createsession (_r_app_getuseragent ());
+				_r_inet_initializedownload (&download_info, NULL, NULL, NULL);
 
-				if (hsession)
+				status = _r_inet_begindownload (hsession, url_string, &download_info);
+
+				if (status == ERROR_SUCCESS)
 				{
-					_r_inet_initializedownload (&download_info);
+					_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, _r_obj_getstringorempty (download_info.u.string), I_IMAGENONE, 2, 0);
 
-					code = _r_inet_begindownload (hsession, url_string, &download_info);
+					_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, url_string->buffer);
 
-					if (code == ERROR_SUCCESS)
-					{
-						_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, _r_obj_getstringorempty (download_info.u.string), I_IMAGENONE, 2, 0);
-
-						_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, url_string->buffer);
-
-						item_id += 1;
-					}
-
-					_r_inet_destroydownload (&download_info);
-
-					_r_inet_close (hsession);
+					item_id += 1;
 				}
 
-				_r_obj_dereference (url_string);
+				_r_inet_destroydownload (&download_info);
+
+				_r_inet_close (hsession);
 			}
+
+			_r_obj_dereference (url_string);
 		}
 	}
 
@@ -176,7 +168,7 @@ NTSTATUS NTAPI _app_print (
 
 	_r_status_settextformat (hwnd, IDC_STATUSBAR, 0, _r_locale_getstring (IDS_STATUS), _r_listview_getitemcount (hwnd, IDC_LISTVIEW));
 
-	InterlockedDecrement (&lock_thread);
+	_InterlockedDecrement (&lock_thread);
 
 	return STATUS_SUCCESS;
 }
@@ -207,10 +199,7 @@ INT_PTR CALLBACK DlgProc (
 			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 0, L"", 10, LVCFMT_LEFT);
 			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 1, L"", 10, LVCFMT_LEFT);
 
-			state_mask = 0;
-
-			if (_r_sys_isosversiongreaterorequal (WINDOWS_VISTA))
-				state_mask = LVGS_COLLAPSIBLE;
+			state_mask = LVGS_COLLAPSIBLE;
 
 			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 0, L"IPv4", 0, state_mask, state_mask);
 			_r_listview_addgroup (hwnd, IDC_LISTVIEW, 1, L"IPv6", 0, state_mask, state_mask);
@@ -236,9 +225,6 @@ INT_PTR CALLBACK DlgProc (
 
 			_r_menu_checkitem (hmenu, IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"AlwaysOnTop", FALSE));
 			_r_menu_checkitem (hmenu, IDM_GETEXTERNALIP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"GetExternalIp", FALSE));
-
-			if (!_r_sys_isosversiongreaterorequal (WINDOWS_7))
-				_r_menu_enableitem (hmenu, IDM_GETEXTERNALIP_CHK, MF_BYCOMMAND, FALSE);
 
 			break;
 		}
@@ -318,7 +304,7 @@ INT_PTR CALLBACK DlgProc (
 				_r_menu_setitemtextformat (hmenu, IDM_REFRESH, FALSE, L"%s\tF5", _r_locale_getstring (IDS_REFRESH));
 				_r_menu_setitemtextformat (hmenu, IDM_COPY, FALSE, L"%s\tCtrl+C", _r_locale_getstring (IDS_COPY));
 
-				if (InterlockedCompareExchange (&lock_thread, 0, 0) != 0)
+				if (_InterlockedCompareExchange (&lock_thread, 0, 0) != 0)
 					_r_menu_enableitem (hsubmenu, IDM_REFRESH, MF_BYCOMMAND, FALSE);
 
 				if (!_r_listview_getselectedcount (hwnd, IDC_LISTVIEW))
@@ -337,8 +323,7 @@ INT_PTR CALLBACK DlgProc (
 			INT ctrl_id = LOWORD (wparam);
 			INT notify_code = HIWORD (wparam);
 
-			if (notify_code == 0 && ctrl_id >= IDX_LANGUAGE &&
-				ctrl_id <= IDX_LANGUAGE + (INT_PTR)_r_locale_getcount () + 1)
+			if (notify_code == 0 && ctrl_id >= IDX_LANGUAGE && ctrl_id <= IDX_LANGUAGE + (INT_PTR)_r_locale_getcount () + 1)
 			{
 				HMENU hsubmenu;
 
@@ -390,7 +375,7 @@ INT_PTR CALLBACK DlgProc (
 
 				case IDM_WEBSITE:
 				{
-					ShellExecute (hwnd, NULL, _r_app_getwebsite_url (), NULL, NULL, SW_SHOWDEFAULT);
+					ShellExecute (hwnd, NULL, _r_app_getsources_url (), NULL, NULL, SW_SHOWDEFAULT);
 					break;
 				}
 
@@ -402,7 +387,7 @@ INT_PTR CALLBACK DlgProc (
 
 				case IDM_REFRESH:
 				{
-					if (InterlockedCompareExchange (&lock_thread, 0, 0) == 0)
+					if (_InterlockedCompareExchange (&lock_thread, 0, 0) == 0)
 						_r_sys_createthread (&_app_print, hwnd, NULL, NULL, NULL);
 
 					break;
@@ -412,11 +397,9 @@ INT_PTR CALLBACK DlgProc (
 				{
 					R_STRINGBUILDER buffer;
 					PR_STRING string;
-					INT item_id;
+					INT item_id = -1;
 
-					item_id = -1;
-
-					_r_obj_initializestringbuilder (&buffer);
+					_r_obj_initializestringbuilder (&buffer, 512);
 
 					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != -1)
 					{
@@ -465,7 +448,7 @@ INT APIENTRY wWinMain (
 {
 	HWND hwnd;
 
-	if (!_r_app_initialize ())
+	if (!_r_app_initialize (NULL))
 		return ERROR_APP_INIT_FAILURE;
 
 	hwnd = _r_app_createwindow (hinst, MAKEINTRESOURCE (IDD_MAIN), MAKEINTRESOURCE (IDI_MAIN), &DlgProc);
