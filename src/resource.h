@@ -19,19 +19,24 @@
 #define IDC_LISTVIEW 102
 #define IDC_STATUSBAR 103
 
+// Settings Dlg
+#define IDC_NAV 104
+#define IDC_RESET 105
+#define IDC_CLOSE 106
+
 // Main Menu
-#define IDM_EXIT 104
-#define IDM_ALWAYSONTOP_CHK 105
-#define IDM_CLASSICUI_CHK 106
-#define IDM_GETEXTERNALIP_CHK 107
-#define IDM_WEBSITE 108
-#define IDM_DONATE 109
-#define IDM_ABOUT 110
+#define IDM_EXIT 107
+#define IDM_ALWAYSONTOP_CHK 108
+#define IDM_CLASSICUI_CHK 109
+#define IDM_GETEXTERNALIP_CHK 110
+#define IDM_WEBSITE 111
+#define IDM_DONATE 112
+#define IDM_ABOUT 113
 
 // Listview Menu
-#define IDM_REFRESH 111
-#define IDM_COPY 112
-#define IDM_SELECT_ALL 113
+#define IDM_REFRESH 114
+#define IDM_COPY 115
+#define IDM_SELECT_ALL 116
 
 #define IDX_LANGUAGE 1000
 
