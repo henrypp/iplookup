@@ -375,7 +375,7 @@ INT_PTR CALLBACK DlgProc (
 
 				case IDM_WEBSITE:
 				{
-					ShellExecute (hwnd, NULL, _r_app_getsources_url (), NULL, NULL, SW_SHOWDEFAULT);
+					_r_shell_opendefault (_r_app_getwebsite_url ());
 					break;
 				}
 
