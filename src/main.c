@@ -27,6 +27,7 @@ NTSTATUS NTAPI _app_print (
 	WCHAR buffer[128];
 	PSOCKADDR_IN ipv4;
 	PSOCKADDR_IN6 ipv6;
+	PR_STRING proxy_string;
 	PR_STRING url_string;
 	ADDRESS_FAMILY af;
 	WSADATA wsa;
@@ -143,9 +144,11 @@ NTSTATUS NTAPI _app_print (
 			{
 				_r_inet_initializedownload (&download_info, NULL, NULL, NULL);
 
-				status = _r_inet_begindownload (hsession, url_string, &download_info);
+				proxy_string = _r_app_getproxyconfiguration ();
 
-				if (status == ERROR_SUCCESS)
+				status = _r_inet_begindownload (hsession, url_string, proxy_string, &download_info);
+
+				if (status)
 				{
 					_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, _r_obj_getstringorempty (download_info.u.string), I_IMAGENONE, 2, 0);
 
@@ -155,6 +158,9 @@ NTSTATUS NTAPI _app_print (
 				}
 
 				_r_inet_destroydownload (&download_info);
+
+				if (proxy_string)
+					_r_obj_dereference (proxy_string);
 
 				_r_inet_close (hsession);
 			}
