@@ -95,7 +95,7 @@ NTSTATUS NTAPI _app_print (
 						ipv4 = (PSOCKADDR_IN)address->Address.lpSockaddr;
 						buffer_length = RTL_NUMBER_OF (buffer);
 
-						status = RtlIpv4AddressToStringEx (&(ipv4->sin_addr), 0, buffer, &buffer_length);
+						status = RtlIpv4AddressToStringExW (&(ipv4->sin_addr), 0, buffer, &buffer_length);
 
 						if (NT_SUCCESS (status))
 						{
@@ -112,7 +112,7 @@ NTSTATUS NTAPI _app_print (
 						ipv6 = (PSOCKADDR_IN6)address->Address.lpSockaddr;
 						buffer_length = RTL_NUMBER_OF (buffer);
 
-						status = RtlIpv6AddressToStringEx (&(ipv6->sin6_addr), 0, 0, buffer, &buffer_length);
+						status = RtlIpv6AddressToStringExW (&(ipv6->sin6_addr), 0, 0, buffer, &buffer_length);
 
 						if (NT_SUCCESS (status))
 						{
@@ -214,7 +214,7 @@ INT_PTR CALLBACK DlgProc (
 			_r_layout_initializemanager (&layout_manager, hwnd);
 
 			// refresh list
-			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
+			PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
 
 			break;
 		}
@@ -297,7 +297,7 @@ INT_PTR CALLBACK DlgProc (
 			if (GetDlgCtrlID ((HWND)wparam) != IDC_LISTVIEW)
 				break;
 
-			hmenu = LoadMenu (NULL, MAKEINTRESOURCE (IDM_LISTVIEW));
+			hmenu = LoadMenuW (NULL, MAKEINTRESOURCE (IDM_LISTVIEW));
 
 			if (!hmenu)
 				break;
@@ -374,7 +374,7 @@ INT_PTR CALLBACK DlgProc (
 					_r_menu_checkitem (GetMenu (hwnd), IDM_GETEXTERNALIP_CHK, 0, MF_BYCOMMAND, new_val);
 					_r_config_setboolean (L"GetExternalIp", new_val);
 
-					PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
+					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
 
 					break;
 				}
@@ -401,11 +401,11 @@ INT_PTR CALLBACK DlgProc (
 
 				case IDM_COPY:
 				{
-					R_STRINGBUILDER buffer;
+					R_STRINGBUILDER sb;
 					PR_STRING string;
 					INT item_id = -1;
 
-					_r_obj_initializestringbuilder (&buffer, 512);
+					_r_obj_initializestringbuilder (&sb, 512);
 
 					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != -1)
 					{
@@ -413,20 +413,20 @@ INT_PTR CALLBACK DlgProc (
 
 						if (string)
 						{
-							_r_obj_appendstringbuilder2 (&buffer, string);
-							_r_obj_appendstringbuilder (&buffer, L"\r\n");
+							_r_obj_appendstringbuilder2 (&sb, string);
+							_r_obj_appendstringbuilder (&sb, L"\r\n");
 
 							_r_obj_dereference (string);
 						}
 					}
 
-					string = _r_obj_finalstringbuilder (&buffer);
+					string = _r_obj_finalstringbuilder (&sb);
 
 					_r_str_trimstring2 (string, L"\r\n ", 0);
 
 					_r_clipboard_set (hwnd, &string->sr);
 
-					_r_obj_deletestringbuilder (&buffer);
+					_r_obj_deletestringbuilder (&sb);
 
 					break;
 				}
