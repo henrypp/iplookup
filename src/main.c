@@ -138,19 +138,19 @@ NTSTATUS NTAPI _app_print (
 
 		if (url_string)
 		{
-			hsession = _r_inet_createsession (_r_app_getuseragent ());
+			proxy_string = _r_app_getproxyconfiguration ();
+
+			hsession = _r_inet_createsession (_r_app_getuseragent (), proxy_string);
 
 			if (hsession)
 			{
 				_r_inet_initializedownload (&download_info, NULL, NULL, NULL);
 
-				proxy_string = _r_app_getproxyconfiguration ();
-
-				status = _r_inet_begindownload (hsession, url_string, proxy_string, &download_info);
+				status = _r_inet_begindownload (hsession, url_string, &download_info);
 
 				if (status)
 				{
-					_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, _r_obj_getstringorempty (download_info.u.string), I_IMAGENONE, 2, 0);
+					_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, _r_obj_getstringorempty (download_info.string), I_IMAGENONE, 2, 0);
 
 					_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, url_string->buffer);
 
@@ -159,11 +159,11 @@ NTSTATUS NTAPI _app_print (
 
 				_r_inet_destroydownload (&download_info);
 
-				if (proxy_string)
-					_r_obj_dereference (proxy_string);
-
 				_r_inet_close (hsession);
 			}
+
+			if (proxy_string)
+				_r_obj_dereference (proxy_string);
 
 			_r_obj_dereference (url_string);
 		}
@@ -192,15 +192,11 @@ INT_PTR CALLBACK DlgProc (
 	{
 		case WM_INITDIALOG:
 		{
+			UINT style = LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_LABELTIP;
 			UINT state_mask;
 
 			// configure listview
-			_r_listview_setstyle (
-				hwnd,
-				IDC_LISTVIEW,
-				LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_LABELTIP,
-				TRUE
-			);
+			_r_listview_setstyle (hwnd, IDC_LISTVIEW, style, TRUE);
 
 			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 0, L"", 10, LVCFMT_LEFT);
 			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 1, L"", 10, LVCFMT_LEFT);
@@ -214,7 +210,7 @@ INT_PTR CALLBACK DlgProc (
 			_r_layout_initializemanager (&layout_manager, hwnd);
 
 			// refresh list
-			PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
+			_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
 
 			break;
 		}
@@ -374,7 +370,7 @@ INT_PTR CALLBACK DlgProc (
 					_r_menu_checkitem (GetMenu (hwnd), IDM_GETEXTERNALIP_CHK, 0, MF_BYCOMMAND, new_val);
 					_r_config_setboolean (L"GetExternalIp", new_val);
 
-					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
+					_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
 
 					break;
 				}
