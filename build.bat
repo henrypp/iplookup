@@ -1,6 +1,6 @@
 @echo off
 
 cd ..\builder
-call build iplookup 1.7.4
+call build iplookup 1.8
 
 pause
