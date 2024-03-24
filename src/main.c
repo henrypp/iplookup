@@ -148,7 +148,7 @@ NTSTATUS NTAPI _app_print (
 
 				status = _r_inet_begindownload (hsession, url_string, &download_info);
 
-				if (status)
+				if (status == STATUS_SUCCESS)
 				{
 					_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, _r_obj_getstringorempty (download_info.string), I_IMAGENONE, 2, 0);
 
@@ -226,6 +226,7 @@ INT_PTR CALLBACK DlgProc (
 				break;
 
 			_r_menu_checkitem (hmenu, IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"AlwaysOnTop", FALSE));
+			_r_menu_checkitem (hmenu, IDM_DARKMODE_CHK, 0, MF_BYCOMMAND, _r_theme_isenabled ());
 			_r_menu_checkitem (hmenu, IDM_GETEXTERNALIP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"GetExternalIp", FALSE));
 
 			break;
@@ -252,6 +253,7 @@ INT_PTR CALLBACK DlgProc (
 			_r_menu_setitemtextformat (GetSubMenu (hmenu, 1), LANG_MENU, TRUE, L"%s (Language)", _r_locale_getstring (IDS_LANGUAGE));
 			_r_menu_setitemtextformat (hmenu, IDM_EXIT, FALSE, L"%s\tEsc", _r_locale_getstring (IDS_EXIT));
 			_r_menu_setitemtext (hmenu, IDM_ALWAYSONTOP_CHK, FALSE, _r_locale_getstring (IDS_ALWAYSONTOP_CHK));
+			_r_menu_setitemtext (hmenu, IDM_DARKMODE_CHK, FALSE, _r_locale_getstring (IDS_DARKMODE_CHK));
 			_r_menu_setitemtext (hmenu, IDM_GETEXTERNALIP_CHK, FALSE, _r_locale_getstring (IDS_GETEXTERNALIP_CHK));
 			_r_menu_setitemtext (hmenu, IDM_WEBSITE, FALSE, _r_locale_getstring (IDS_WEBSITE));
 			_r_menu_setitemtext (hmenu, IDM_ABOUT, FALSE, _r_locale_getstring (IDS_ABOUT));
@@ -357,6 +359,19 @@ INT_PTR CALLBACK DlgProc (
 					_r_config_setboolean (L"AlwaysOnTop", new_val);
 
 					_r_wnd_top (hwnd, new_val);
+
+					break;
+				}
+
+				case IDM_DARKMODE_CHK:
+				{
+					BOOLEAN new_val;
+
+					new_val = !_r_theme_isenabled ();
+
+					_r_theme_enable (hwnd, new_val);
+
+					_r_menu_checkitem (GetMenu (hwnd), ctrl_id, 0, MF_BYCOMMAND, new_val);
 
 					break;
 				}
