@@ -27,16 +27,17 @@
 // Main Menu
 #define IDM_EXIT 107
 #define IDM_ALWAYSONTOP_CHK 108
-#define IDM_CLASSICUI_CHK 109
-#define IDM_GETEXTERNALIP_CHK 110
-#define IDM_WEBSITE 111
-#define IDM_DONATE 112
-#define IDM_ABOUT 113
+#define IDM_DARKMODE_CHK 109
+#define IDM_CLASSICUI_CHK 110
+#define IDM_GETEXTERNALIP_CHK 111
+#define IDM_WEBSITE 112
+#define IDM_DONATE 113
+#define IDM_ABOUT 114
 
 // Listview Menu
-#define IDM_REFRESH 114
-#define IDM_COPY 115
-#define IDM_SELECT_ALL 116
+#define IDM_REFRESH 115
+#define IDM_COPY 116
+#define IDM_SELECT_ALL 117
 
 #define IDX_LANGUAGE 1000
 
@@ -60,7 +61,7 @@
 #define IDS_GROUP1 17
 #define IDS_GROUP2 18
 #define IDS_STATUS 19
-#define IDS_CLASSICUI_CHK 20
+#define IDS_DARKMODE_CHK 20
 
 // Icons
 #define IDI_MAIN 100
