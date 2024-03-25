@@ -1,3 +1,10 @@
+v1.8 (26 March 2024)
+- dropped windows 7 and windows 8 support
+- added mitigations (win10+)
+- added dark theme support
+- updated localization
+- updated project sdk
+
 v1.7.3 (7 November 2021)
 - fixed windows xp support
 
