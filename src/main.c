@@ -1,5 +1,5 @@
 // iplookup
-// Copyright (c) 2011-2023 Henry++
+// Copyright (c) 2011-2024 Henry++
 
 #include <ws2tcpip.h>
 #include <winsock2.h>
