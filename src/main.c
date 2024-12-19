@@ -16,6 +16,107 @@
 
 volatile LONG lock_thread = 0;
 
+INT CALLBACK _app_listview_compare_callback (
+	_In_ LPARAM lparam1,
+	_In_ LPARAM lparam2,
+	_In_ LPARAM lparam
+)
+{
+	WCHAR config_name[128];
+	HWND hwnd;
+	LONG column_id;
+	INT listview_id;
+	INT result = 0;
+	INT item_id1;
+	INT item_id2;
+	PR_STRING item_text_1;
+	PR_STRING item_text_2;
+	BOOLEAN is_descend;
+
+	hwnd = GetParent ((HWND)lparam);
+
+	if (!hwnd)
+		return 0;
+
+	listview_id = GetDlgCtrlID ((HWND)lparam);
+
+	if (!listview_id)
+		return 0;
+
+	item_id1 = (INT)(INT_PTR)lparam1;
+	item_id2 = (INT)(INT_PTR)lparam2;
+
+	_r_str_printf (config_name, RTL_NUMBER_OF (config_name), L"listview\\%04" TEXT (PRIX32), listview_id);
+
+	column_id = _r_config_getlong_ex (L"SortColumn", 0, config_name);
+	is_descend = _r_config_getboolean_ex (L"SortIsDescending", FALSE, config_name);
+
+	item_text_1 = _r_listview_getitemtext (hwnd, listview_id, item_id1, column_id);
+	item_text_2 = _r_listview_getitemtext (hwnd, listview_id, item_id2, column_id);
+
+	if (item_text_1 && item_text_2)
+		result = _r_str_compare_logical (item_text_1->buffer, item_text_2->buffer);
+
+	if (item_text_1)
+		_r_obj_dereference (item_text_1);
+
+	if (item_text_2)
+		_r_obj_dereference (item_text_2);
+
+	return is_descend ? -result : result;
+}
+
+VOID _app_listview_sort (
+	_In_ HWND hwnd,
+	_In_ INT listview_id,
+	_In_ LONG column_id,
+	_In_ BOOLEAN is_notifycode
+)
+{
+	WCHAR config_name[128];
+	HWND hlistview;
+	INT column_count;
+	BOOLEAN is_descend;
+
+	hlistview = GetDlgItem (hwnd, listview_id);
+
+	if (!hlistview)
+		return;
+
+	if ((GetWindowLongPtrW (hlistview, GWL_STYLE) & (LVS_NOSORTHEADER | LVS_OWNERDATA)) != 0)
+		return;
+
+	column_count = _r_listview_getcolumncount (hwnd, listview_id);
+
+	if (!column_count)
+		return;
+
+	_r_str_printf (config_name, RTL_NUMBER_OF (config_name), L"listview\\%04" TEXT (PRIX32), listview_id);
+
+	is_descend = _r_config_getboolean_ex (L"SortIsDescending", FALSE, config_name);
+
+	if (is_notifycode)
+		is_descend = !is_descend;
+
+	if (column_id == -1)
+		column_id = _r_config_getlong_ex (L"SortColumn", 0, config_name);
+
+	column_id = _r_calc_clamp (column_id, 0, column_count - 1); // set range
+
+	if (is_notifycode)
+	{
+		_r_config_setboolean_ex (L"SortIsDescending", is_descend, config_name);
+		_r_config_setlong_ex (L"SortColumn", column_id, config_name);
+	}
+
+	for (INT i = 0; i < column_count; i++)
+		_r_listview_setcolumnsortindex (hwnd, listview_id, i, 0);
+
+	_r_listview_setcolumnsortindex (hwnd, listview_id, column_id, is_descend ? -1 : 1);
+
+	_r_listview_sort (hwnd, listview_id, &_app_listview_compare_callback, (WPARAM)hlistview);
+}
+
 NTSTATUS NTAPI _app_print (
 	_In_ PVOID lparam
 )
@@ -99,9 +200,9 @@ NTSTATUS NTAPI _app_print (
 
 						if (NT_SUCCESS (status))
 						{
-							_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, buffer, I_IMAGENONE, 0, 0);
+							_r_listview_additem (hwnd, IDC_LISTVIEW, item_id, buffer, I_DEFAULT, 0, I_DEFAULT);
 
-							_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, adapter->Description);
+							_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, adapter->Description, I_DEFAULT, I_DEFAULT, I_DEFAULT);
 
 							item_id += 1;
 						}
@@ -116,9 +217,9 @@ NTSTATUS NTAPI _app_print (
 
 						if (NT_SUCCESS (status))
 						{
-							_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, buffer, I_IMAGENONE, 1, 0);
+							_r_listview_additem (hwnd, IDC_LISTVIEW, item_id, buffer, I_DEFAULT, 1, I_DEFAULT);
 
-							_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, adapter->Description);
+							_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, adapter->Description, I_DEFAULT, I_DEFAULT, I_DEFAULT);
 
 							item_id += 1;
 						}
@@ -150,9 +251,9 @@ NTSTATUS NTAPI _app_print (
 
 				if (status == STATUS_SUCCESS)
 				{
-					_r_listview_additem_ex (hwnd, IDC_LISTVIEW, item_id, _r_obj_getstringorempty (download_info.string), I_IMAGENONE, 2, 0);
+					_r_listview_additem (hwnd, IDC_LISTVIEW, item_id, _r_obj_getstringorempty (download_info.string), I_DEFAULT, 2, I_DEFAULT);
 
-					_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, url_string->buffer);
+					_r_listview_setitem (hwnd, IDC_LISTVIEW, item_id, 1, url_string->buffer, I_DEFAULT, I_DEFAULT, I_DEFAULT);
 
 					item_id += 1;
 				}
@@ -173,6 +274,8 @@ NTSTATUS NTAPI _app_print (
 	_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 1, NULL, -60);
 
 	_r_status_settextformat (hwnd, IDC_STATUSBAR, 0, _r_locale_getstring (IDS_STATUS), _r_listview_getitemcount (hwnd, IDC_LISTVIEW));
+
+	_app_listview_sort (hwnd, IDC_LISTVIEW, 0, FALSE);
 
 	_InterlockedDecrement (&lock_thread);
 
