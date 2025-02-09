@@ -48,8 +48,8 @@ INT CALLBACK _app_listview_compare_callback (
 
 	_r_str_printf (config_name, RTL_NUMBER_OF (config_name), L"listview\\%04" TEXT (PRIX32), listview_id);
 
-	column_id = _r_config_getlong_ex (L"SortColumn", 0, config_name);
-	is_descend = _r_config_getboolean_ex (L"SortIsDescending", FALSE, config_name);
+	column_id = _r_config_getlong (L"SortColumn", 0, config_name);
+	is_descend = _r_config_getboolean (L"SortIsDescending", FALSE, config_name);
 
 	item_text_1 = _r_listview_getitemtext (hwnd, listview_id, item_id1, column_id);
 	item_text_2 = _r_listview_getitemtext (hwnd, listview_id, item_id2, column_id);
@@ -93,20 +93,20 @@ VOID _app_listview_sort (
 
 	_r_str_printf (config_name, RTL_NUMBER_OF (config_name), L"listview\\%04" TEXT (PRIX32), listview_id);
 
-	is_descend = _r_config_getboolean_ex (L"SortIsDescending", FALSE, config_name);
+	is_descend = _r_config_getboolean (L"SortIsDescending", FALSE, config_name);
 
 	if (is_notifycode)
 		is_descend = !is_descend;
 
 	if (column_id == -1)
-		column_id = _r_config_getlong_ex (L"SortColumn", 0, config_name);
+		column_id = _r_config_getlong (L"SortColumn", 0, config_name);
 
 	column_id = _r_calc_clamp (column_id, 0, column_count - 1); // set range
 
 	if (is_notifycode)
 	{
-		_r_config_setboolean_ex (L"SortIsDescending", is_descend, config_name);
-		_r_config_setlong_ex (L"SortColumn", column_id, config_name);
+		_r_config_setboolean (L"SortIsDescending", is_descend, config_name);
+		_r_config_setlong (L"SortColumn", column_id, config_name);
 	}
 
 	for (INT i = 0; i < column_count; i++)
@@ -233,9 +233,9 @@ NTSTATUS NTAPI _app_print (
 		WSACleanup ();
 	}
 
-	if (_r_config_getboolean (L"GetExternalIp", FALSE))
+	if (_r_config_getboolean (L"GetExternalIp", FALSE, NULL))
 	{
-		url_string = _r_config_getstring (L"ExternalUrl", EXTERNAL_URL);
+		url_string = _r_config_getstring (L"ExternalUrl", EXTERNAL_URL, NULL);
 
 		if (url_string)
 		{
@@ -328,9 +328,9 @@ INT_PTR CALLBACK DlgProc (
 			if (!hmenu)
 				break;
 
-			_r_menu_checkitem (hmenu, IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"AlwaysOnTop", FALSE));
+			_r_menu_checkitem (hmenu, IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"AlwaysOnTop", FALSE, NULL));
 			_r_menu_checkitem (hmenu, IDM_DARKMODE_CHK, 0, MF_BYCOMMAND, _r_theme_isenabled ());
-			_r_menu_checkitem (hmenu, IDM_GETEXTERNALIP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"GetExternalIp", FALSE));
+			_r_menu_checkitem (hmenu, IDM_GETEXTERNALIP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"GetExternalIp", FALSE, NULL));
 
 			break;
 		}
@@ -456,10 +456,10 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"AlwaysOnTop", FALSE);
+					new_val = !_r_config_getboolean (L"AlwaysOnTop", FALSE, NULL);
 
 					_r_menu_checkitem (GetMenu (hwnd), IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, new_val);
-					_r_config_setboolean (L"AlwaysOnTop", new_val);
+					_r_config_setboolean (L"AlwaysOnTop", new_val, NULL);
 
 					_r_wnd_top (hwnd, new_val);
 
@@ -483,10 +483,10 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"GetExternalIp", FALSE);
+					new_val = !_r_config_getboolean (L"GetExternalIp", FALSE, NULL);
 
 					_r_menu_checkitem (GetMenu (hwnd), IDM_GETEXTERNALIP_CHK, 0, MF_BYCOMMAND, new_val);
-					_r_config_setboolean (L"GetExternalIp", new_val);
+					_r_config_setboolean (L"GetExternalIp", new_val, NULL);
 
 					_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
 
