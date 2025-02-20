@@ -1,5 +1,4 @@
 v1.8 (26 March 2024)
-- dropped windows 7 and windows 8 support
 - added mitigations (win10+)
 - added dark theme support
 - updated localization
