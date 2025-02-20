@@ -41,5 +41,5 @@ Binaries have GPG signature `iplookup.exe.sig` in application folder.
 ---
 - Website: [github.com/henrypp](https://github.com/henrypp)
 - Support: sforce5@mail.ru
-<br />
-(c) 2011-2024 Henry++
+---
+(c) 2011-2025 Henry++
