@@ -1,5 +1,5 @@
 // iplookup
-// Copyright (c) 2011-2024 Henry++
+// Copyright (c) 2011-2025 Henry++
 
 #include <ws2tcpip.h>
 #include <winsock2.h>
@@ -117,7 +117,7 @@ VOID _app_listview_sort (
 	_r_listview_sort (hwnd, listview_id, &_app_listview_compare_callback, (WPARAM)hlistview);
 }
 
-NTSTATUS NTAPI _app_print (
+VOID NTAPI _app_print (
 	_In_ PVOID lparam
 )
 {
@@ -278,8 +278,6 @@ NTSTATUS NTAPI _app_print (
 	_app_listview_sort (hwnd, IDC_LISTVIEW, 0, FALSE);
 
 	_InterlockedDecrement (&lock_thread);
-
-	return STATUS_SUCCESS;
 }
 
 INT_PTR CALLBACK DlgProc (
@@ -313,7 +311,7 @@ INT_PTR CALLBACK DlgProc (
 			_r_layout_initializemanager (&layout_manager, hwnd);
 
 			// refresh list
-			_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDM_REFRESH, 0), 0);
+			_r_ctrl_sendcommand (hwnd, IDM_REFRESH, 0);
 
 			break;
 		}
