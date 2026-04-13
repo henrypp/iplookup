@@ -1,5 +1,5 @@
 // Ip Lookup
-// Copyright (c) 2011-2024 Henry++
+// Copyright (c) 2011-2026 Henry++
 
 #pragma once
 

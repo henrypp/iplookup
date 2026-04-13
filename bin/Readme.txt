@@ -4,7 +4,7 @@ Application for displaying list of IP addresses your computer, include external 
 
 To activate portable mode, create "iplookup.ini" in application folder, or move it from "%APPDATA%\Henry++\Ip Lookup".
 
-Website: www.henrypp.org
-Support: support@henrypp.org
+Website: https://github.com/henrypp
+Support: sforce5@mail.ru
 
-(c) 2011-2025 Henry++
+(c) 2011-2026 Henry++
