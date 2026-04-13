@@ -1,5 +1,5 @@
 // iplookup
-// Copyright (c) 2011-2025 Henry++
+// Copyright (c) 2011-2026 Henry++
 
 #include <ws2tcpip.h>
 #include <winsock2.h>
@@ -247,7 +247,7 @@ VOID NTAPI _app_print (
 			{
 				_r_inet_initializedownload (&download_info, NULL, NULL, NULL);
 
-				status = _r_inet_begindownload (hsession, &url_string->sr, &download_info);
+				status = _r_inet_begindownload (&download_info, hsession, &url_string->sr);
 
 				if (status == STATUS_SUCCESS)
 				{
